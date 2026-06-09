@@ -12,10 +12,6 @@ namespace Oloraculo.Web.Services
     {
         private readonly OloraculoDbContext _db;
         private readonly IWebHostEnvironment _environment;
-        private const string GroupsCsv = "wc2026_groups.csv";
-        private const string EloCsv = "elo_snapshot.csv";
-        private const string FifaRankingCsv = "fifa_rankings.csv";
-        private const string HistoricalResultsCsv = "historical_results.csv";
 
         public CsvImportService(OloraculoDbContext db, IWebHostEnvironment env)
         {
@@ -61,17 +57,25 @@ namespace Oloraculo.Web.Services
             };
         }
 
+        public async Task<int> ImportRatingsOnlyAsync(CancellationToken ct = default)
+        {
+            await _db.Database.EnsureCreatedAsync(ct);
+            await ImportRatingsAsync(ct);
+            await _db.SaveChangesAsync(ct);
+            return await _db.Ratings.CountAsync(ct);
+        }
+
         private async Task ImportGroupsAsync(CancellationToken ct)
         {
             _db.Groups.RemoveRange(_db.Groups);
-            var groupRows = CsvParsingHelper.ReadCsv<GroupCsvRow>(FullPath(GroupsCsv));
+            var groupRows = CsvParsingHelper.ReadCsv<GroupCsvRow>(FullPath(OloraculoDataFiles.GroupsCsv));
             var teams = new Dictionary<string, Team>();
 
             foreach (var row in groupRows)
             {
                 var name = TeamNameNormalizer.CanonicalName(row.Team);
                 var id = TeamNameNormalizer.ToId(row.Team);
-                teams[id] = new Team { Id = id, Name = name, Source = GroupsCsv };
+                teams[id] = new Team { Id = id, Name = name, Source = OloraculoDataFiles.GroupsCsv };
             }
 
             foreach (var team in teams.Values)
@@ -89,7 +93,7 @@ namespace Oloraculo.Web.Services
                 {
                     Name = group.Key,
                     TeamIds = group.Select(r => TeamNameNormalizer.ToId(r.Team)).ToList(),
-                    Source = GroupsCsv,
+                    Source = OloraculoDataFiles.GroupsCsv,
                 });
             }
         }
@@ -98,37 +102,37 @@ namespace Oloraculo.Web.Services
         {
             _db.Ratings.RemoveRange(_db.Ratings);
 
-            var eloRows = CsvParsingHelper.ReadCsv<EloCsvRow>(FullPath(EloCsv));
+            var eloRows = CsvParsingHelper.ReadCsv<EloCsvRow>(FullPath(OloraculoDataFiles.EloCsv));
             foreach (var row in eloRows)
             {
                 if (!double.TryParse(row.Elo, NumberStyles.Float, CultureInfo.InvariantCulture, out var elo))
                     continue;
 
-                await CreateTeamIfMissing(row.Team, EloCsv, ct);
+                await CreateTeamIfMissing(row.Team, OloraculoDataFiles.EloCsv, ct);
                 _db.Ratings.Add(new Rating
                 {
                     TeamId = TeamNameNormalizer.ToId(row.Team),
                     Type = RatingTypeEnum.Elo,
                     Value = elo,
                     AsOf = DateTimeOffset.UtcNow,
-                    Source = EloCsv
+                    Source = OloraculoDataFiles.EloCsv
                 });
             }
 
-            var fifaRows = CsvParsingHelper.ReadCsv<FifaCsvRow>(FullPath(FifaRankingCsv));
+            var fifaRows = CsvParsingHelper.ReadCsv<FifaCsvRow>(FullPath(OloraculoDataFiles.FifaRankingsCsv));
             foreach (var row in fifaRows)
             {
                 if (!double.TryParse(row.Points, NumberStyles.Float, CultureInfo.InvariantCulture, out var points))
                     continue;
 
-                await CreateTeamIfMissing(row.Team, FifaRankingCsv, ct);
+                await CreateTeamIfMissing(row.Team, OloraculoDataFiles.FifaRankingsCsv, ct);
                 _db.Ratings.Add(new Rating
                 {
                     TeamId = TeamNameNormalizer.ToId(row.Team),
                     Type = RatingTypeEnum.Fifa,
                     Value = points,
                     AsOf = DateTimeOffset.UtcNow,
-                    Source = FifaRankingCsv
+                    Source = OloraculoDataFiles.FifaRankingsCsv
                 });
             }
         }
@@ -136,7 +140,7 @@ namespace Oloraculo.Web.Services
         private async Task ImportHistoricalResultsAsync(CancellationToken ct)
         {
             _db.Results.RemoveRange(_db.Results);
-            var rows = CsvParsingHelper.ReadCsv<HistoricalResultCsvRow>(FullPath(HistoricalResultsCsv));
+            var rows = CsvParsingHelper.ReadCsv<HistoricalResultCsvRow>(FullPath(OloraculoDataFiles.HistoricalResultsCsv));
             var importedIds = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var row in rows)
@@ -155,8 +159,8 @@ namespace Oloraculo.Web.Services
                 if (!importedIds.Add(resultId))
                     continue;
 
-                await CreateTeamIfMissing(row.HomeTeam, HistoricalResultsCsv, ct);
-                await CreateTeamIfMissing(row.AwayTeam, HistoricalResultsCsv, ct);
+                await CreateTeamIfMissing(row.HomeTeam, OloraculoDataFiles.HistoricalResultsCsv, ct);
+                await CreateTeamIfMissing(row.AwayTeam, OloraculoDataFiles.HistoricalResultsCsv, ct);
 
                 _db.Results.Add(new MatchResult
                 {
@@ -168,7 +172,7 @@ namespace Oloraculo.Web.Services
                     Date = date,
                     Tournament = row.Tournament,
                     Neutral = bool.TryParse(row.Neutral, out var neutral) && neutral,
-                    Source = HistoricalResultsCsv
+                    Source = OloraculoDataFiles.HistoricalResultsCsv
                 });
             }
         }
@@ -192,7 +196,7 @@ namespace Oloraculo.Web.Services
                             HomeTeamId = teams[i],
                             AwayTeamId = teams[j],
                             NeutralVenue = true,
-                            Source = $"derived from {GroupsCsv}"
+                            Source = $"derived from {OloraculoDataFiles.GroupsCsv}"
                         });
                     }
                 }

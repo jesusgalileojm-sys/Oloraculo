@@ -1,6 +1,7 @@
 @page "/data"
 @rendermode InteractiveServer
 @inject CsvImportService Importer
+@inject RankingRefreshService Rankings
 @inject ApiFootballService Api
 @inject OloraculoDbContext Db
 
@@ -14,11 +15,24 @@
 <div class="card">
     <div class="row">
         <button @onclick="ImportAll" disabled="@_busy">@(_busy ? "Importing..." : "Re-import CSV data")</button>
+        <button class="secondary" @onclick="RefreshRankings" disabled="@_rankingsBusy">@(_rankingsBusy ? "Refreshing..." : "Refresh rankings")</button>
         <button class="secondary" @onclick="RefreshApi" disabled="@_apiBusy">@(_apiBusy ? "Refreshing..." : "Refresh API-Football fixtures")</button>
     </div>
     @if (_report is not null)
     {
         <p class="small muted">@_report.Teams teams, @_report.Groups groups, @_report.Fixtures fixtures, @_report.Results results, @_report.Ratings ratings.</p>
+    }
+    @if (_rankingsReport is not null)
+    {
+        <p class="small muted">@string.Join(" ", _rankingsReport.Notes)</p>
+        @if (_rankingsReport.AnyFileUpdated)
+        {
+            <p class="small muted">Updated @string.Join(", ", _rankingsReport.UpdatedFiles). Imported @_ratings ratings.</p>
+        }
+        @foreach (var error in _rankingsReport.Errors)
+        {
+            <div class="banner warn">@error</div>
+        }
     }
     @if (_apiReport is not null)
     {
@@ -52,7 +66,9 @@
 @code {
     private bool _busy;
     private bool _apiBusy;
+    private bool _rankingsBusy;
     private CsvImportReport? _report;
+    private RankingRefreshReport? _rankingsReport;
     private ApiFootballRefreshReport? _apiReport;
     private int _teams;
     private int _fixtures;
@@ -87,6 +103,22 @@
         finally
         {
             _apiBusy = false;
+        }
+    }
+
+    private async Task RefreshRankings()
+    {
+        _rankingsBusy = true;
+        try
+        {
+            _rankingsReport = await Rankings.RefreshAsync();
+            if (_rankingsReport.AnyFileUpdated)
+                _ratings = await Importer.ImportRatingsOnlyAsync();
+            await Load();
+        }
+        finally
+        {
+            _rankingsBusy = false;
         }
     }
 

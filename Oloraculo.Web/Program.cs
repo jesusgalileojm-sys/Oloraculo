@@ -26,6 +26,12 @@ builder.Services.AddScoped<PredictionService>();
 builder.Services.AddScoped<EvaluationService>();
 builder.Services.AddScoped<SnapshotService>();
 builder.Services.AddScoped<SimulationService>();
+builder.Services.AddHttpClient<RankingRefreshService>((sp, client) =>
+{
+    var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OloraculoConfig>>().Value;
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.RankingRefreshUserAgent);
+});
 builder.Services.AddHttpClient<ApiFootballService>((sp, client) =>
 {
     var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OloraculoConfig>>().Value;
@@ -42,7 +48,38 @@ var app = builder.Build();
 
 using (var Scope = app.Services.CreateScope())
 {
+    var Config = Scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OloraculoConfig>>().Value;
     var CsvImporterService = Scope.ServiceProvider.GetRequiredService<CsvImportService>();
+    if (Config.RankingRefreshOnStartup)
+    {
+        try
+        {
+            var RankingRefresh = Scope.ServiceProvider.GetRequiredService<RankingRefreshService>();
+            var RankingReport = await RankingRefresh.RefreshAsync();
+            foreach (var note in RankingReport.Notes)
+                app.Logger.LogInformation("{Note}", note);
+            foreach (var error in RankingReport.Errors)
+                app.Logger.LogWarning("{Error}", error);
+
+            if (RankingReport.AnyFileUpdated)
+            {
+                var Db = Scope.ServiceProvider.GetRequiredService<OloraculoDbContext>();
+                var HasImportedData =
+                    await Db.Groups.AnyAsync() &&
+                    await Db.Teams.AnyAsync() &&
+                    await Db.Fixtures.AnyAsync() &&
+                    await Db.Results.AnyAsync();
+
+                if (HasImportedData)
+                    await CsvImporterService.ImportRatingsOnlyAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(ex, "Ranking refresh failed during startup. Existing CSV data will be used.");
+        }
+    }
+
     await CsvImporterService.ImportIfNeededAsync();
 }
 
