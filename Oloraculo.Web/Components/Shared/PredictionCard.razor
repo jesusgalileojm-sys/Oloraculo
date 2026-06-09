@@ -4,7 +4,7 @@
         <MudText Typo="Typo.subtitle1">@Prediction.PredictorName</MudText>
         @if (Prediction.Degraded)
         {
-            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">degraded</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">degradado</MudChip>
         }
     </MudStack>
 
@@ -19,7 +19,7 @@
             - @Prediction.ExpectedAwayGoals.Value.ToString("0.00") @AwayLabel
             @if (Prediction.MostLikelyScore.HasValue)
             {
-                <span> | likely @Prediction.MostLikelyScore.Value.Home-@Prediction.MostLikelyScore.Value.Away</span>
+                <span> | probable @Prediction.MostLikelyScore.Value.Home-@Prediction.MostLikelyScore.Value.Away</span>
             }
         </MudText>
     }
@@ -30,7 +30,7 @@
     {
         <MudGrid Spacing="2" Class="mt-2">
             <MudItem xs="12" md="6">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Used</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Usado</MudText>
                 <MudStack Row="true" Spacing="1" Class="chip-wrap">
                     @foreach (var feature in Prediction.FeaturesUsed)
                     {
@@ -38,12 +38,12 @@
                     }
                     @if (Prediction.FeaturesUsed.Count == 0)
                     {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">none</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">ninguno</MudText>
                     }
                 </MudStack>
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Missing</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Falta</MudText>
                 <MudStack Row="true" Spacing="1" Class="chip-wrap">
                     @foreach (var feature in Prediction.FeaturesMissing)
                     {
@@ -51,7 +51,7 @@
                     }
                     @if (Prediction.FeaturesMissing.Count == 0)
                     {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">none</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">nada</MudText>
                     }
                 </MudStack>
             </MudItem>
@@ -59,7 +59,7 @@
 
         @if (Prediction.Drivers.Count > 0)
         {
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="section-label">Drivers</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="section-label">Factores</MudText>
             <ul class="driver-list">
                 @foreach (var driver in Prediction.Drivers)
                 {
@@ -72,7 +72,7 @@
 
 @code {
     [Parameter, EditorRequired] public MatchPrediction Prediction { get; set; } = default!;
-    [Parameter] public string HomeLabel { get; set; } = "Home";
-    [Parameter] public string AwayLabel { get; set; } = "Away";
+    [Parameter] public string HomeLabel { get; set; } = "Local";
+    [Parameter] public string AwayLabel { get; set; } = "Visitante";
     [Parameter] public bool ShowDetails { get; set; } = true;
 }

@@ -196,7 +196,7 @@ namespace Oloraculo.Web.Services
                             HomeTeamId = teams[i],
                             AwayTeamId = teams[j],
                             NeutralVenue = true,
-                            Source = $"derived from {OloraculoDataFiles.GroupsCsv}"
+                            Source = $"derivado de {OloraculoDataFiles.GroupsCsv}"
                         });
                     }
                 }

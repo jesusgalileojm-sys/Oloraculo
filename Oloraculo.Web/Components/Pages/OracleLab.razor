@@ -4,18 +4,18 @@
 @inject PredictionService Predictor
 @inject ISnackbar Snackbar
 
-<PageTitle>Oracle Lab</PageTitle>
+<PageTitle>Laboratorio</PageTitle>
 
 <MudStack Spacing="3">
     <div class="page-head">
-        <MudText Typo="Typo.h3">Oracle Lab</MudText>
-        <MudText Typo="Typo.body1" Color="Color.Secondary">Compare any two teams across the full prediction ladder.</MudText>
+        <MudText Typo="Typo.h3">Laboratorio</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Compará dos equipos en toda la escalera de predicción.</MudText>
     </div>
 
     <MudPaper Class="surface-card" Elevation="0">
         <MudGrid Spacing="2" Class="control-grid">
             <MudItem xs="12" md="5">
-                <MudSelect T="string" Label="Team A" @bind-Value="_homeId" Dense="true" Disabled="@_busy" Variant="Variant.Outlined">
+                <MudSelect T="string" Label="Equipo A" @bind-Value="_homeId" Dense="true" Disabled="@_busy" Variant="Variant.Outlined">
                     @foreach (var team in _teams)
                     {
                         <MudSelectItem T="string" Value="@team.Id">@team.Name</MudSelectItem>
@@ -23,7 +23,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="5">
-                <MudSelect T="string" Label="Team B" @bind-Value="_awayId" Dense="true" Disabled="@_busy" Variant="Variant.Outlined">
+                <MudSelect T="string" Label="Equipo B" @bind-Value="_awayId" Dense="true" Disabled="@_busy" Variant="Variant.Outlined">
                     @foreach (var team in _teams)
                     {
                         <MudSelectItem T="string" Value="@team.Id">@team.Name</MudSelectItem>
@@ -31,7 +31,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="2" Class="action-cell">
-                <BusyButton Text="Predict" BusyText="Predicting" IsBusy="_busy" Disabled="@(_homeId is null || _awayId is null || _homeId == _awayId)" Icon="@Icons.Material.Filled.AutoAwesome" OnClick="Predict" />
+                <BusyButton Text="Predecir" BusyText="Prediciendo" IsBusy="_busy" Disabled="@(_homeId is null || _awayId is null || _homeId == _awayId)" Icon="@Icons.Material.Filled.AutoAwesome" OnClick="Predict" />
             </MudItem>
         </MudGrid>
         @if (_busy)
@@ -97,12 +97,12 @@
         try
         {
             _result = await Predictor.PredictPairAsync(_homeId, _awayId);
-            Snackbar.Add("Prediction complete.", Severity.Success);
+            Snackbar.Add("Predicción completa.", Severity.Success);
         }
         catch (Exception ex)
         {
             _error = ex.Message;
-            Snackbar.Add("Prediction failed.", Severity.Error);
+            Snackbar.Add("No se pudo generar la predicción.", Severity.Error);
         }
         finally
         {

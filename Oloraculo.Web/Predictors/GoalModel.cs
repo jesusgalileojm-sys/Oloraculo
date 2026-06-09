@@ -21,7 +21,7 @@ namespace Oloraculo.Web.Predictors
             (_strengths, _avgGoals, _matchesUsed) = Fit(results, yearsWindow);
         }
 
-        public virtual string Name => "Goal (Poisson) Model";
+        public virtual string Name => "Modelo de goles (Poisson)";
         public virtual int Priority => 4;
 
         public virtual MatchPrediction Predict(MatchContext context)
@@ -42,15 +42,15 @@ namespace Oloraculo.Web.Predictors
                 ExpectedAwayGoals = Math.Round(awayGoals, 2),
                 Scoreline = scoreline,
                 MostLikelyScore = mostLikely,
-                Explanation = $"Expected goals: {context.HomeTeam.Name} {homeGoals:0.00} - {awayGoals:0.00} {context.AwayTeam.Name}, fitted from {_matchesUsed} historical results in a {_yearsWindow}-year window.",
-                Drivers = [$"Most likely score: {mostLikely.Home}-{mostLikely.Away}"],
+                Explanation = $"Goles esperados: {context.HomeTeam.Name} {homeGoals:0.00} - {awayGoals:0.00} {context.AwayTeam.Name}, ajustado con {_matchesUsed} resultados históricos en una ventana de {_yearsWindow} años.",
+                Drivers = [$"Marcador más probable: {mostLikely.Home}-{mostLikely.Away}"],
                 FeaturesUsed =
                 [
-                    nameof(FeaturesEnum.OpponentAdjustedAttackStrength),
-                    nameof(FeaturesEnum.OpponentAdjustedDefenseVulnerability),
-                    nameof(FeaturesEnum.DixonColesScorelineGrid)
+                    "Fuerza de ataque ajustada por rival",
+                    "Vulnerabilidad defensiva ajustada por rival",
+                    "Grilla de marcadores Dixon-Coles"
                 ],
-                FeaturesMissing = degraded ? ["enough team-specific goal history for both sides"] : [],
+                FeaturesMissing = degraded ? ["historial de goles suficiente para ambos equipos"] : [],
                 Sources = [SourceMetadata.HistoricalResultsCsv],
                 Degraded = degraded
             };

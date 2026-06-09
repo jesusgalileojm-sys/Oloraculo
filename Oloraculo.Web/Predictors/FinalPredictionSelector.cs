@@ -7,7 +7,7 @@ namespace Oloraculo.Web.Predictors
     {
         private const double RankingBiasWeight = 0.15;
         private const string EloPredictorName = "Elo";
-        private const string FifaPredictorName = "FIFA ranking";
+        private const string FifaPredictorName = "Ranking FIFA";
 
         public static MatchPrediction Select(IReadOnlyList<MatchPrediction> ladder)
         {
@@ -24,14 +24,14 @@ namespace Oloraculo.Web.Predictors
 
             var drivers = new List<string>
             {
-                $"Selected {selected.PredictorName} as the highest usable rung."
+                $"Seleccionó {selected.PredictorName} como el escalón usable más alto."
             };
-            drivers.AddRange(skippedHigher.Select(p => $"Skipped {p.PredictorName}: {Reason(p)}"));
+            drivers.AddRange(skippedHigher.Select(p => $"Omitió {p.PredictorName}: {Reason(p)}"));
             drivers.AddRange(selected.Drivers);
             if (rankingBias is not null)
             {
                 drivers.Add(
-                    $"Applied {RankingBiasWeight:P0} Elo/FIFA calibration toward {rankingBias.ConsensusTopPick} because both ranking models agreed against {selected.PredictorName}.");
+                    $"Aplicó una calibración Elo/FIFA de {RankingBiasWeight:P0} hacia {OutcomeLabel(rankingBias.ConsensusTopPick)} porque ambos modelos de ranking coincidieron contra {selected.PredictorName}.");
             }
 
             var sources = selected.Sources
@@ -42,7 +42,7 @@ namespace Oloraculo.Web.Predictors
 
             return new MatchPrediction
             {
-                PredictorName = "Final Oracle",
+                PredictorName = "Oráculo final",
                 PredictorPriority = selected.PredictorPriority,
                 FixtureId = selected.FixtureId,
                 HomeTeamId = selected.HomeTeamId,
@@ -96,33 +96,42 @@ namespace Oloraculo.Web.Predictors
         {
             var rankingSentence = rankingBias is null
                 ? ""
-                : $" Applied a {RankingBiasWeight:P0} Elo/FIFA calibration toward {rankingBias.ConsensusTopPick}.";
+                : $" Aplicó una calibración Elo/FIFA de {RankingBiasWeight:P0} hacia {OutcomeLabel(rankingBias.ConsensusTopPick)}.";
 
             if (skippedHigher.Count == 0)
-                return $"Final Oracle selected {selected.PredictorName}, the highest usable rung. {selected.Explanation}{rankingSentence}";
+                return $"El Oráculo final seleccionó {selected.PredictorName}, el escalón usable más alto. {selected.Explanation}{rankingSentence}";
 
             var skipped = string.Join("; ", skippedHigher.Select(p => $"{p.PredictorName} {Reason(p)}"));
-            return $"Final Oracle selected {selected.PredictorName} because {skipped}. {selected.Explanation}{rankingSentence}";
+            return $"El Oráculo final seleccionó {selected.PredictorName} porque {skipped}. {selected.Explanation}{rankingSentence}";
         }
 
         private static string Reason(MatchPrediction prediction)
         {
             if (prediction.FeaturesMissing.Count == 0)
-                return "was degraded";
+                return "no era usable";
 
-            return $"was degraded: missing {string.Join(", ", prediction.FeaturesMissing)}";
+            var missingVerb = prediction.FeaturesMissing.Count == 1 ? "faltaba" : "faltaban";
+            return $"no era usable: {missingVerb} {string.Join(", ", prediction.FeaturesMissing)}";
         }
 
         private static MatchPrediction EmptyFinal() => new()
         {
-            PredictorName = "Final Oracle",
+            PredictorName = "Oráculo final",
             PredictorPriority = 0,
             Outcome = OutcomeProbabilities.Uniform,
-            Explanation = "Final Oracle had no ladder predictions, so it returned the baseline.",
-            Drivers = ["No ladder predictions were available."],
-            FeaturesMissing = ["ladder predictions"],
+            Explanation = "El Oráculo final no tenía predicciones de la escalera, así que devolvió la base.",
+            Drivers = ["No había predicciones disponibles en la escalera."],
+            FeaturesMissing = ["predicciones de la escalera"],
             Sources = [new SourceMetadata("model ladder", "derived")],
             Degraded = true
+        };
+
+        private static string OutcomeLabel(string outcome) => outcome switch
+        {
+            "Home" => "equipo A",
+            "Away" => "equipo B",
+            "Draw" => "empate",
+            _ => outcome
         };
 
         private sealed record RankingBias(

@@ -20,7 +20,7 @@ namespace Oloraculo.Web.Predictors
                     HomeTeamId = context.HomeTeam.Id,
                     AwayTeamId = context.AwayTeam.Id,
                     Outcome = OutcomeProbabilities.Uniform,
-                    Explanation = "Elo ratings are not available for both teams.",
+                    Explanation = "Faltan ratings Elo para uno o ambos equipos.",
                     Degraded = true
                 };
             }
@@ -36,10 +36,10 @@ namespace Oloraculo.Web.Predictors
                 HomeTeamId = context.HomeTeam.Id,
                 AwayTeamId = context.AwayTeam.Id,
                 Outcome = Outcome,
-                Explanation = $"Eloquehay - Based on Elo ratings of {context.HomeElo.Value} for {context.HomeTeam.Name} " +
-                $"and {context.AwayElo.Value} for {context.AwayTeam.Name}.",
-                Drivers = new[] { $"Elo gap: {Diff:+0;-0}" },
-                FeaturesUsed = new[] { "Home Team Elo", "Away Team Elo" },
+                Explanation = $"Eloquehay: basado en Elo {context.HomeElo.Value} para {context.HomeTeam.Name} " +
+                $"y {context.AwayElo.Value} para {context.AwayTeam.Name}.",
+                Drivers = new[] { $"Diferencia Elo: {Diff:+0;-0}" },
+                FeaturesUsed = new[] { "Elo del equipo A", "Elo del equipo B" },
                 FeaturesMissing = Array.Empty<string>(),
                 Sources = new[] { SourceMetadata.EloRatings },
                 Degraded = false

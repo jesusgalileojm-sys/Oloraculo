@@ -55,7 +55,7 @@ namespace Oloraculo.Web.Services
                 CreatedAt = projection.GeneratedAt,
                 InputSummaryHash = projection.InputSummaryHash,
                 PayloadJson = payload,
-                Explanation = $"{projection.Simulations:N0} simulations using {projection.ModelName}.",
+                Explanation = $"{projection.Simulations:N0} simulaciones usando {projection.ModelName}.",
                 HomeWin = 0,
                 Draw = 0,
                 AwayWin = 0

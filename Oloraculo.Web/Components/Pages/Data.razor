@@ -6,12 +6,12 @@
 @inject OloraculoDbContext Db
 @inject ISnackbar Snackbar
 
-<PageTitle>Data</PageTitle>
+<PageTitle>Datos</PageTitle>
 
 <MudStack Spacing="3">
     <div class="page-head">
-        <MudText Typo="Typo.h3">Data</MudText>
-        <MudText Typo="Typo.body1" Color="Color.Secondary">CSV import status and optional API-Football refresh.</MudText>
+        <MudText Typo="Typo.h3">Datos</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Estado de importación CSV y actualización opcional desde API-Football.</MudText>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_error))
@@ -21,9 +21,9 @@
 
     <MudPaper Class="surface-card" Elevation="0">
         <MudStack Row="true" Spacing="1" Class="action-row">
-            <BusyButton Text="Re-import CSV data" BusyText="Importing" IsBusy="_busy" Icon="@Icons.Material.Filled.UploadFile" OnClick="ImportAll" />
-            <BusyButton Text="Refresh rankings" BusyText="Refreshing" IsBusy="_rankingsBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Sync" OnClick="RefreshRankings" />
-            <BusyButton Text="Refresh API-Football fixtures" BusyText="Refreshing" IsBusy="_apiBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.CloudSync" OnClick="RefreshApi" />
+            <BusyButton Text="Reimportar CSV" BusyText="Importando" IsBusy="_busy" Icon="@Icons.Material.Filled.UploadFile" OnClick="ImportAll" />
+            <BusyButton Text="Actualizar rankings" BusyText="Actualizando" IsBusy="_rankingsBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Sync" OnClick="RefreshRankings" />
+            <BusyButton Text="Actualizar partidos API-Football" BusyText="Actualizando" IsBusy="_apiBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.CloudSync" OnClick="RefreshApi" />
         </MudStack>
         @if (_busy || _rankingsBusy || _apiBusy)
         {
@@ -31,7 +31,7 @@
         }
         @if (_report is not null)
         {
-            <MudAlert Class="mt-2" Severity="Severity.Success" Variant="Variant.Outlined">@_report.Teams teams, @_report.Groups groups, @_report.Fixtures fixtures, @_report.Results results, @_report.Ratings ratings.</MudAlert>
+            <MudAlert Class="mt-2" Severity="Severity.Success" Variant="Variant.Outlined">@_report.Teams equipos, @_report.Groups grupos, @_report.Fixtures partidos, @_report.Results resultados, @_report.Ratings ratings.</MudAlert>
         }
         @if (_rankingsReport is not null)
         {
@@ -39,7 +39,7 @@
                 @string.Join(" ", _rankingsReport.Notes)
                 @if (_rankingsReport.AnyFileUpdated)
                 {
-                    <span> Updated @string.Join(", ", _rankingsReport.UpdatedFiles). Imported @_ratings ratings.</span>
+                    <span> Archivos actualizados: @string.Join(", ", _rankingsReport.UpdatedFiles). Ratings importados: @_ratings.</span>
                 }
             </MudAlert>
             @foreach (var error in _rankingsReport.Errors)
@@ -58,8 +58,8 @@
     </MudPaper>
 
     <MudGrid Spacing="2">
-        <MudItem xs="12" md="4"><MudPaper Class="stat-card" Elevation="0"><MudText Typo="Typo.h4">@_teams</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">Teams</MudText></MudPaper></MudItem>
-        <MudItem xs="12" md="4"><MudPaper Class="stat-card" Elevation="0"><MudText Typo="Typo.h4">@_fixtures</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">Fixtures</MudText></MudPaper></MudItem>
+        <MudItem xs="12" md="4"><MudPaper Class="stat-card" Elevation="0"><MudText Typo="Typo.h4">@_teams</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">Equipos</MudText></MudPaper></MudItem>
+        <MudItem xs="12" md="4"><MudPaper Class="stat-card" Elevation="0"><MudText Typo="Typo.h4">@_fixtures</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">Partidos</MudText></MudPaper></MudItem>
         <MudItem xs="12" md="4"><MudPaper Class="stat-card" Elevation="0"><MudText Typo="Typo.h4">@_ratings</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">Ratings</MudText></MudPaper></MudItem>
     </MudGrid>
 
@@ -75,16 +75,16 @@
         {
             <MudTable Items="_ratingRows" Dense="true" Hover="true" Elevation="0" Class="dense-table">
                 <HeaderContent>
-                    <MudTh>Team</MudTh>
-                    <MudTh>Type</MudTh>
-                    <MudTh Class="num">Value</MudTh>
-                    <MudTh>Source</MudTh>
+                    <MudTh>Equipo</MudTh>
+                    <MudTh>Tipo</MudTh>
+                    <MudTh Class="num">Valor</MudTh>
+                    <MudTh>Fuente</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Team">@Name(context.TeamId)</MudTd>
-                    <MudTd DataLabel="Type">@context.Type</MudTd>
-                    <MudTd DataLabel="Value" Class="num">@context.Value.ToString("0")</MudTd>
-                    <MudTd DataLabel="Source">@context.Source</MudTd>
+                    <MudTd DataLabel="Equipo">@Name(context.TeamId)</MudTd>
+                    <MudTd DataLabel="Tipo">@context.Type</MudTd>
+                    <MudTd DataLabel="Valor" Class="num">@context.Value.ToString("0")</MudTd>
+                    <MudTd DataLabel="Fuente">@context.Source</MudTd>
                 </RowTemplate>
             </MudTable>
         }
@@ -120,12 +120,12 @@
         {
             _report = await Importer.ImportAllAsync();
             await Load();
-            Snackbar.Add("CSV data imported.", Severity.Success);
+            Snackbar.Add("Datos CSV importados.", Severity.Success);
         }
         catch (Exception ex)
         {
             _error = ex.Message;
-            Snackbar.Add("CSV import failed.", Severity.Error);
+            Snackbar.Add("No se pudo importar el CSV.", Severity.Error);
         }
         finally
         {
@@ -141,12 +141,12 @@
         {
             _apiReport = await Api.RefreshFixturesAsync();
             await Load();
-            Snackbar.Add(_apiReport.Errors.Count > 0 ? "API refresh completed with warnings." : "API-Football fixtures refreshed.", _apiReport.Errors.Count > 0 ? Severity.Warning : Severity.Success);
+            Snackbar.Add(_apiReport.Errors.Count > 0 ? "La actualización de API terminó con advertencias." : "Partidos de API-Football actualizados.", _apiReport.Errors.Count > 0 ? Severity.Warning : Severity.Success);
         }
         catch (Exception ex)
         {
             _error = ex.Message;
-            Snackbar.Add("API-Football refresh failed.", Severity.Error);
+            Snackbar.Add("No se pudo actualizar API-Football.", Severity.Error);
         }
         finally
         {
@@ -164,12 +164,12 @@
             if (_rankingsReport.AnyFileUpdated)
                 _ratings = await Importer.ImportRatingsOnlyAsync();
             await Load();
-            Snackbar.Add(_rankingsReport.Errors.Count > 0 ? "Ranking refresh completed with warnings." : "Rankings refreshed.", _rankingsReport.Errors.Count > 0 ? Severity.Warning : Severity.Success);
+            Snackbar.Add(_rankingsReport.Errors.Count > 0 ? "La actualización de rankings terminó con advertencias." : "Rankings actualizados.", _rankingsReport.Errors.Count > 0 ? Severity.Warning : Severity.Success);
         }
         catch (Exception ex)
         {
             _error = ex.Message;
-            Snackbar.Add("Ranking refresh failed.", Severity.Error);
+            Snackbar.Add("No se pudieron actualizar los rankings.", Severity.Error);
         }
         finally
         {

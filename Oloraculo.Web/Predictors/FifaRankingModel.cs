@@ -6,7 +6,7 @@ namespace Oloraculo.Web.Predictors
 {
     public class FifaRankingModel : IPredictor
     {
-        public string Name => "FIFA ranking";
+        public string Name => "Ranking FIFA";
         public int Priority => 1;
 
         public MatchPrediction Predict(MatchContext context)
@@ -23,7 +23,7 @@ namespace Oloraculo.Web.Predictors
                     HomeTeamId = context.HomeTeam.Id,
                     AwayTeamId = context.AwayTeam.Id,
                     Outcome = OutcomeProbabilities.Uniform,
-                    Explanation = "FIFA ranking data is missing for one or both teams.",
+                    Explanation = "Faltan datos de ranking FIFA para uno o ambos equipos.",
                     Degraded = true
                 };
             }
@@ -39,9 +39,9 @@ namespace Oloraculo.Web.Predictors
                 HomeTeamId = context.HomeTeam.Id,
                 AwayTeamId = context.AwayTeam.Id,
                 Outcome = OutcomeProbability,
-                Explanation = $"Based on FIFA ranking points: {context.HomeTeam.Name} {home.Value:0}, {context.AwayTeam.Name} {away.Value:0}.",
-                Drivers = new[] { $"FIFA points gap: {Diff:+0;-0}" },
-                FeaturesUsed = new[] { "Home FIFA points", "Away FIFA points" },
+                Explanation = $"Basado en puntos de ranking FIFA: {context.HomeTeam.Name} {home.Value:0}, {context.AwayTeam.Name} {away.Value:0}.",
+                Drivers = new[] { $"Diferencia de puntos FIFA: {Diff:+0;-0}" },
+                FeaturesUsed = new[] { "Puntos FIFA del equipo A", "Puntos FIFA del equipo B" },
                 FeaturesMissing = Array.Empty<string>(),
                 Sources = new[] { SourceMetadata.FifaRankings },
                 Degraded = false
