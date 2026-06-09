@@ -1,0 +1,78 @@
+<div class="card">
+    <div class="row">
+        <span class="badge">L@Prediction.PredictorPriority</span>
+        <strong>@Prediction.PredictorName</strong>
+        @if (Prediction.Degraded)
+        {
+            <span class="badge bad">degraded</span>
+        }
+    </div>
+
+    <div class="prob-wrap">
+        <ProbabilityBar Outcome="Prediction.Outcome" HomeLabel="@HomeLabel" AwayLabel="@AwayLabel" />
+    </div>
+
+    @if (Prediction.ExpectedHomeGoals.HasValue && Prediction.ExpectedAwayGoals.HasValue)
+    {
+        <div class="small muted">
+            xG @HomeLabel @Prediction.ExpectedHomeGoals.Value.ToString("0.00")
+            - @Prediction.ExpectedAwayGoals.Value.ToString("0.00") @AwayLabel
+            @if (Prediction.MostLikelyScore.HasValue)
+            {
+                <span> | likely @Prediction.MostLikelyScore.Value.Home-@Prediction.MostLikelyScore.Value.Away</span>
+            }
+        </div>
+    }
+
+    <p class="explain">@Prediction.Explanation</p>
+
+    @if (ShowDetails)
+    {
+        <div class="grid cols-2 compact">
+            <div>
+                <h3>Used</h3>
+                <div class="row">
+                    @foreach (var feature in Prediction.FeaturesUsed)
+                    {
+                        <span class="badge good">@feature</span>
+                    }
+                    @if (Prediction.FeaturesUsed.Count == 0)
+                    {
+                        <span class="muted small">none</span>
+                    }
+                </div>
+            </div>
+            <div>
+                <h3>Missing</h3>
+                <div class="row">
+                    @foreach (var feature in Prediction.FeaturesMissing)
+                    {
+                        <span class="badge bad">@feature</span>
+                    }
+                    @if (Prediction.FeaturesMissing.Count == 0)
+                    {
+                        <span class="muted small">none</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (Prediction.Drivers.Count > 0)
+        {
+            <h3 class="section-label">Drivers</h3>
+            <ul class="small">
+                @foreach (var driver in Prediction.Drivers)
+                {
+                    <li>@driver</li>
+                }
+            </ul>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MatchPrediction Prediction { get; set; } = default!;
+    [Parameter] public string HomeLabel { get; set; } = "Home";
+    [Parameter] public string AwayLabel { get; set; } = "Away";
+    [Parameter] public bool ShowDetails { get; set; } = true;
+}

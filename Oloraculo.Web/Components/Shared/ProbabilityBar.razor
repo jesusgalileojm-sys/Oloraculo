@@ -1,0 +1,19 @@
+<div class="prob">
+    <div class="seg home" style="width:@Pct(Outcome.HomeWin)">@Label(Outcome.HomeWin)</div>
+    <div class="seg draw" style="width:@Pct(Outcome.Draw)">@Label(Outcome.Draw)</div>
+    <div class="seg away" style="width:@Pct(Outcome.AwayWin)">@Label(Outcome.AwayWin)</div>
+</div>
+<div class="legend">
+    <span>@HomeLabel @Outcome.HomeWin.ToString("P0")</span>
+    <span>Draw @Outcome.Draw.ToString("P0")</span>
+    <span>@AwayLabel @Outcome.AwayWin.ToString("P0")</span>
+</div>
+
+@code {
+    [Parameter] public OutcomeProbabilities Outcome { get; set; }
+    [Parameter] public string HomeLabel { get; set; } = "Home";
+    [Parameter] public string AwayLabel { get; set; } = "Away";
+
+    private static string Pct(double value) => $"{Math.Max(value * 100, 0):0.###}%";
+    private static string Label(double value) => value >= .08 ? value.ToString("P0") : "";
+}

@@ -1,0 +1,103 @@
+@page "/data"
+@rendermode InteractiveServer
+@inject CsvImportService Importer
+@inject ApiFootballService Api
+@inject OloraculoDbContext Db
+
+<PageTitle>Data</PageTitle>
+
+<div class="page-head">
+    <h1>Data</h1>
+    <p>CSV import status and optional API-Football refresh.</p>
+</div>
+
+<div class="card">
+    <div class="row">
+        <button @onclick="ImportAll" disabled="@_busy">@(_busy ? "Importing..." : "Re-import CSV data")</button>
+        <button class="secondary" @onclick="RefreshApi" disabled="@_apiBusy">@(_apiBusy ? "Refreshing..." : "Refresh API-Football fixtures")</button>
+    </div>
+    @if (_report is not null)
+    {
+        <p class="small muted">@_report.Teams teams, @_report.Groups groups, @_report.Fixtures fixtures, @_report.Results results, @_report.Ratings ratings.</p>
+    }
+    @if (_apiReport is not null)
+    {
+        <p class="small muted">@string.Join(" ", _apiReport.Notes)</p>
+        @foreach (var error in _apiReport.Errors)
+        {
+            <div class="banner warn">@error</div>
+        }
+    }
+</div>
+
+<div class="grid cols-3">
+    <div class="card stat"><span class="value">@_teams</span><span class="label">Teams</span></div>
+    <div class="card stat"><span class="value">@_fixtures</span><span class="label">Fixtures</span></div>
+    <div class="card stat"><span class="value">@_ratings</span><span class="label">Ratings</span></div>
+</div>
+
+<div class="card">
+    <h2>Ratings</h2>
+    <table>
+        <thead><tr><th>Team</th><th>Type</th><th class="num">Value</th><th>Source</th></tr></thead>
+        <tbody>
+            @foreach (var rating in _ratingRows)
+            {
+                <tr><td>@Name(rating.TeamId)</td><td>@rating.Type</td><td class="num">@rating.Value.ToString("0")</td><td>@rating.Source</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private bool _busy;
+    private bool _apiBusy;
+    private CsvImportReport? _report;
+    private ApiFootballRefreshReport? _apiReport;
+    private int _teams;
+    private int _fixtures;
+    private int _ratings;
+    private List<Rating> _ratingRows = [];
+    private Dictionary<string, string> _names = [];
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task ImportAll()
+    {
+        _busy = true;
+        try
+        {
+            _report = await Importer.ImportAllAsync();
+            await Load();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RefreshApi()
+    {
+        _apiBusy = true;
+        try
+        {
+            _apiReport = await Api.RefreshFixturesAsync();
+            await Load();
+        }
+        finally
+        {
+            _apiBusy = false;
+        }
+    }
+
+    private async Task Load()
+    {
+        _teams = await Db.Teams.CountAsync();
+        _fixtures = await Db.Fixtures.CountAsync();
+        _ratings = await Db.Ratings.CountAsync();
+        _names = await Db.Teams.ToDictionaryAsync(t => t.Id, t => t.Name);
+        _ratingRows = await Db.Ratings.OrderByDescending(r => r.Value).Take(40).ToListAsync();
+    }
+
+    private string Name(string id) => _names.TryGetValue(id, out var name) ? name : id;
+}

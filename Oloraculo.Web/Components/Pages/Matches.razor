@@ -1,0 +1,179 @@
+@page "/matches"
+@rendermode InteractiveServer
+@inject OloraculoDbContext Db
+@inject PredictionService Predictor
+@inject SnapshotService Snapshots
+@inject EvaluationService Evaluation
+@inject ApiFootballService Api
+
+<PageTitle>Matches</PageTitle>
+
+<div class="page-head">
+    <h1>Matches</h1>
+    <p>Group fixtures, snapshots, API context, and result entry.</p>
+</div>
+
+<div class="grid cols-2">
+    <div class="card fixture-list">
+        <h2>Fixtures</h2>
+        @foreach (var group in _fixtures.GroupBy(f => f.Group).OrderBy(g => g.Key))
+        {
+            <h3>Group @group.Key</h3>
+            @foreach (var fixture in group)
+            {
+                <div class="fixture-row">
+                    <button class="secondary" @onclick="() => Select(fixture)">Predict</button>
+                    <span>@Name(fixture.HomeTeamId) v @Name(fixture.AwayTeamId)</span>
+                    <span class="spacer"></span>
+                    @if (fixture.IsPlayed && fixture.HomeGoals.HasValue && fixture.AwayGoals.HasValue)
+                    {
+                        <span class="badge good">@fixture.HomeGoals-@fixture.AwayGoals</span>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <div>
+        @if (_busy)
+        {
+            <div class="card">Predicting...</div>
+        }
+        else if (_result is not null && _selected is not null)
+        {
+            <div class="card final-call">
+                <h2>@_result.HomeTeamName vs @_result.AwayTeamName</h2>
+                @if (!string.IsNullOrWhiteSpace(_selected.Venue) || _selected.KickoffUtc is not null)
+                {
+                    <p class="small muted">@_selected.KickoffUtc?.ToString("yyyy-MM-dd HH:mm 'UTC'") @_selected.Venue @_selected.Status</p>
+                }
+                <ProbabilityBar Outcome="_result.BestPrediction.Outcome" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
+                <p class="explain">@_result.BestPrediction.Explanation</p>
+                <div class="row">
+                    <button class="secondary" @onclick="SaveSnapshot" disabled="@_saving">@(_saved ? "Snapshot saved" : "Save prediction")</button>
+                    <button class="secondary" @onclick="RefreshContext" disabled="@_refreshing">@(_refreshing ? "Refreshing..." : "Refresh API context")</button>
+                </div>
+            </div>
+
+            <PredictionCard Prediction="@_result.BestPrediction" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
+
+            <div class="card">
+                <h2>Result</h2>
+                <div class="row controls">
+                    <span>@_result.HomeTeamName</span>
+                    <input type="number" min="0" class="score-input" @bind="_homeGoals" />
+                    <span>-</span>
+                    <input type="number" min="0" class="score-input" @bind="_awayGoals" />
+                    <span>@_result.AwayTeamName</span>
+                    <span class="spacer"></span>
+                    <button @onclick="ApplyResult" disabled="@_applying">@(_applying ? "Scoring..." : "Score snapshot")</button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_note))
+                {
+                    <p class="small muted">@_note</p>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card muted">Select a fixture.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Fixture> _fixtures = [];
+    private Dictionary<string, string> _names = [];
+    private Fixture? _selected;
+    private MatchPredictionResult? _result;
+    private bool _busy;
+    private bool _saving;
+    private bool _saved;
+    private bool _refreshing;
+    private bool _applying;
+    private int _homeGoals;
+    private int _awayGoals;
+    private string _note = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFixtures();
+        _names = await Db.Teams.ToDictionaryAsync(t => t.Id, t => t.Name);
+    }
+
+    private async Task Select(Fixture fixture)
+    {
+        _selected = fixture;
+        _saved = false;
+        _note = "";
+        _homeGoals = fixture.HomeGoals ?? 0;
+        _awayGoals = fixture.AwayGoals ?? 0;
+        _busy = true;
+        try
+        {
+            _result = await Predictor.PredictFixtureAsync(fixture.Id);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SaveSnapshot()
+    {
+        if (_result is null)
+            return;
+
+        _saving = true;
+        try
+        {
+            await Snapshots.SaveMatchAsync(_result.BestPrediction);
+            _saved = true;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task RefreshContext()
+    {
+        if (_selected is null)
+            return;
+
+        _refreshing = true;
+        try
+        {
+            var report = await Api.RefreshFixtureContextAsync(_selected.Id);
+            _note = report.Errors.Count > 0 ? string.Join(" ", report.Errors) : string.Join(" ", report.Notes);
+            _result = await Predictor.PredictFixtureAsync(_selected.Id);
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private async Task ApplyResult()
+    {
+        if (_selected is null)
+            return;
+
+        _applying = true;
+        try
+        {
+            var count = await Evaluation.EvaluateLatestSnapshotAsync(_selected, _homeGoals, _awayGoals);
+            _note = count == 0 ? "No saved pre-match snapshot was found for this fixture." : "Saved result and evaluated the latest snapshot.";
+            await LoadFixtures();
+        }
+        finally
+        {
+            _applying = false;
+        }
+    }
+
+    private async Task LoadFixtures() =>
+        _fixtures = await Db.Fixtures.OrderBy(f => f.Group).ThenBy(f => f.HomeTeamId).ToListAsync();
+
+    private string Name(string id) => _names.TryGetValue(id, out var name) ? name : id;
+}

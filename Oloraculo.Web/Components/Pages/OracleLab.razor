@@ -1,0 +1,90 @@
+@page "/lab"
+@rendermode InteractiveServer
+@inject OloraculoDbContext Db
+@inject PredictionService Predictor
+
+<PageTitle>Oracle Lab</PageTitle>
+
+<div class="page-head">
+    <h1>Oracle Lab</h1>
+    <p>Compare any two teams across the full prediction ladder.</p>
+</div>
+
+<div class="card">
+    <div class="row controls">
+        <label>
+            <span class="small muted">Team A</span>
+            <select @bind="_homeId">
+                @foreach (var team in _teams)
+                {
+                    <option value="@team.Id">@team.Name</option>
+                }
+            </select>
+        </label>
+        <strong>vs</strong>
+        <label>
+            <span class="small muted">Team B</span>
+            <select @bind="_awayId">
+                @foreach (var team in _teams)
+                {
+                    <option value="@team.Id">@team.Name</option>
+                }
+            </select>
+        </label>
+        <span class="spacer"></span>
+        <button @onclick="Predict" disabled="@_busy">@(_busy ? "Predicting..." : "Predict")</button>
+    </div>
+</div>
+
+@if (_result is not null)
+{
+    <div class="card final-call">
+        <div class="row">
+            <span class="badge">Final</span>
+            <strong>@_result.HomeTeamName vs @_result.AwayTeamName</strong>
+        </div>
+        <div class="prob-wrap">
+            <ProbabilityBar Outcome="_result.BestPrediction.Outcome" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
+        </div>
+        <p class="explain">@_result.BestPrediction.Explanation</p>
+    </div>
+
+    <div class="grid cols-2">
+        @foreach (var prediction in _result.Predictions)
+        {
+            <PredictionCard Prediction="@prediction" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
+        }
+        <PredictionCard Prediction="@_result.BestPrediction" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
+    </div>
+}
+
+@code {
+    private List<Team> _teams = [];
+    private string? _homeId;
+    private string? _awayId;
+    private bool _busy;
+    private MatchPredictionResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _teams = await Db.Teams.OrderBy(t => t.Name).ToListAsync();
+        _homeId = _teams.FirstOrDefault()?.Id;
+        _awayId = _teams.Skip(1).FirstOrDefault()?.Id;
+    }
+
+    private async Task Predict()
+    {
+        if (_homeId is null || _awayId is null || _homeId == _awayId)
+            return;
+
+        _busy = true;
+        try
+        {
+            _result = await Predictor.PredictPairAsync(_homeId, _awayId);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

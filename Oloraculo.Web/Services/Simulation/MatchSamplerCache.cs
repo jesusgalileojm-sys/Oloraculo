@@ -1,0 +1,63 @@
+﻿using Oloraculo.Web.Models;
+using Oloraculo.Web.Probability;
+
+namespace Oloraculo.Web.Services.Simulation
+{
+    public class MatchSamplerCache
+    {
+        private readonly PredictionService _prediction;
+        private readonly Dictionary<string, MatchPredictionResult> _cache = new(StringComparer.Ordinal);
+
+        public MatchSamplerCache(PredictionService prediction) => _prediction = prediction;
+
+        public async Task<(int Home, int Away)> SampleScoreAsync(string homeId, string awayId, Random rng, CancellationToken ct)
+        {
+            var prediction = await GetPredictionAsync(homeId, awayId, ct);
+            return SampleScoreFromPrediction(prediction, rng);
+        }
+
+        public async Task<string> KnockoutWinnerAsync(string homeId, string awayId, Random rng, CancellationToken ct)
+        {
+            var prediction = await GetPredictionAsync(homeId, awayId, ct);
+            var score = SampleScoreFromPrediction(prediction, rng);
+            return ResolveKnockoutWinner(homeId, awayId, prediction, score, rng);
+        }
+
+        public async Task<MatchPredictionResult> GetPredictionAsync(string homeId, string awayId, CancellationToken ct)
+        {
+            var key = $"{homeId}|{awayId}";
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+
+            cached = await _prediction.PredictPairAsync(homeId, awayId, ct);
+            _cache[key] = cached;
+            return cached;
+        }
+
+        public static (int Home, int Away) SampleScoreFromPrediction(MatchPredictionResult prediction, Random rng)
+        {
+            var final = prediction.BestPrediction;
+            if (final.Scoreline is not null)
+                return ProbabilityHelper.SampleScore(final.Scoreline, rng);
+
+            var roll = rng.NextDouble();
+            var outcome = final.Outcome;
+            if (roll < outcome.HomeWin) return (1, 0);
+            if (roll < outcome.HomeWin + outcome.Draw) return (1, 1);
+            return (0, 1);
+        }
+
+        public static string ResolveKnockoutWinner(string homeId, string awayId, MatchPredictionResult prediction, (int Home, int Away) score, Random rng)
+        {
+            if (score.Home > score.Away)
+                return homeId;
+            if (score.Away > score.Home)
+                return awayId;
+
+            var outcome = prediction.BestPrediction.Outcome;
+            var decisive = outcome.HomeWin + outcome.AwayWin;
+            var pHome = decisive > 0 ? outcome.HomeWin / decisive : 0.5;
+            return rng.NextDouble() < pHome ? homeId : awayId;
+        }
+    }
+}

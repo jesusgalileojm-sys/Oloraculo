@@ -1,0 +1,60 @@
+@page "/"
+@inject OloraculoDbContext Db
+@inject IOptions<OloraculoConfig> Options
+
+<PageTitle>Oloraculo</PageTitle>
+
+<div class="page-head">
+    <h1>Oloráculo</h1>
+    <p>One Blazor app, one SQLite database, a visible prediction ladder, and an official 2026 tournament simulation.</p>
+</div>
+
+<div class="grid cols-4">
+    <div class="card stat"><span class="value">@_teams</span><span class="label">Teams</span></div>
+    <div class="card stat"><span class="value">@_fixtures</span><span class="label">Fixtures</span></div>
+    <div class="card stat"><span class="value">@_results</span><span class="label">Results</span></div>
+    <div class="card stat"><span class="value">@Options.Value.SimulationCount.ToString("N0")</span><span class="label">Simulations</span></div>
+</div>
+
+<div class="grid cols-2">
+    <div class="card">
+        <h2>Project Loop</h2>
+        <ol>
+            <li>CSV data creates the football world.</li>
+            <li>API-Football can enrich fixtures when available.</li>
+            <li>The ladder predicts one match at a time.</li>
+            <li>The Final Oracle selects the highest usable rung.</li>
+            <li>Monte Carlo plays the official 2026 tournament many times.</li>
+            <li>Saved predictions are graded after results arrive.</li>
+        </ol>
+        <a class="btn" href="lab">Open Oracle Lab</a>
+    </div>
+
+    <div class="card">
+        <h2>Ladder</h2>
+        <table>
+            <tbody>
+                <tr><td><span class="badge">L0</span></td><td>Baseline</td><td class="muted">uniform prior</td></tr>
+                <tr><td><span class="badge">L1</span></td><td>FIFA ranking</td><td class="muted">external points</td></tr>
+                <tr><td><span class="badge">L2</span></td><td>Elo</td><td class="muted">long-term strength</td></tr>
+                <tr><td><span class="badge">L3</span></td><td>Recent form</td><td class="muted">short-term results</td></tr>
+                <tr><td><span class="badge">L4</span></td><td>Goals</td><td class="muted">Poisson scorelines</td></tr>
+                <tr><td><span class="badge">L5</span></td><td>Context</td><td class="muted">sourced adjustment</td></tr>
+                <tr><td><span class="badge">Final</span></td><td>Final Oracle</td><td class="muted">highest usable rung</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private int _teams;
+    private int _fixtures;
+    private int _results;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _teams = await Db.Teams.CountAsync();
+        _fixtures = await Db.Fixtures.CountAsync();
+        _results = await Db.Results.CountAsync();
+    }
+}

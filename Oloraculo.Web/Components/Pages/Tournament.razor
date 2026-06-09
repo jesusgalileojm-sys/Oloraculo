@@ -1,0 +1,83 @@
+@page "/tournament"
+@rendermode InteractiveServer
+@inject SimulationService Simulator
+@inject OloraculoDbContext Db
+@inject IOptions<OloraculoConfig> Options
+
+<PageTitle>Tournament</PageTitle>
+
+<div class="page-head">
+    <h1>Tournament</h1>
+    <p>Monte Carlo projection using the official 2026 group and knockout structure.</p>
+</div>
+
+<div class="card">
+    <div class="row">
+        <button @onclick="Run" disabled="@_busy">@(_busy ? "Simulating..." : "Run simulation")</button>
+        @if (_projection is not null)
+        {
+            <span class="muted small">@_projection.Simulations.ToString("N0") simulations | @_projection.InputSummaryHash</span>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="banner warn">@_error</div>
+}
+
+@if (_projection is not null)
+{
+    <div class="card">
+        <h2>Champion Probability</h2>
+        <table>
+            <thead>
+                <tr><th>Team</th><th class="num">Qualify</th><th class="num">R16</th><th class="num">QF</th><th class="num">SF</th><th class="num">Final</th><th class="num">Champion</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _projection.Teams.Take(32))
+                {
+                    <tr>
+                        <td>@Name(row.TeamId)</td>
+                        <td class="num">@row.Qualify.ToString("P0")</td>
+                        <td class="num">@row.ReachRoundOf16.ToString("P0")</td>
+                        <td class="num">@row.ReachQuarterFinal.ToString("P0")</td>
+                        <td class="num">@row.ReachSemiFinal.ToString("P0")</td>
+                        <td class="num">@row.ReachFinal.ToString("P0")</td>
+                        <td class="num"><strong>@row.WinTournament.ToString("P1")</strong></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private bool _busy;
+    private string _error = "";
+    private TournamentProjection? _projection;
+    private Dictionary<string, string> _names = [];
+
+    protected override async Task OnInitializedAsync() =>
+        _names = await Db.Teams.ToDictionaryAsync(t => t.Id, t => t.Name);
+
+    private async Task Run()
+    {
+        _busy = true;
+        _error = "";
+        try
+        {
+            _projection = await Simulator.RunAsync(Options.Value.SimulationCount);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string Name(string id) => _names.TryGetValue(id, out var name) ? name : id;
+}
