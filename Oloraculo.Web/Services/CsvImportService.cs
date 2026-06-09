@@ -23,6 +23,7 @@ namespace Oloraculo.Web.Services
         {
             await _db.Database.EnsureCreatedAsync(ct);
             await EnsureFixtureResultColumnsAsync(ct);
+            await EnsureAvailabilityTablesAsync(ct);
 
             var needsImport =
                 !await _db.Groups.AnyAsync(ct) ||
@@ -40,6 +41,7 @@ namespace Oloraculo.Web.Services
         {
             await _db.Database.EnsureCreatedAsync(ct);
             await EnsureFixtureResultColumnsAsync(ct);
+            await EnsureAvailabilityTablesAsync(ct);
             await ImportGroupsAsync(ct);
             await ImportRatingsAsync(ct);
             await ImportHistoricalResultsAsync(ct);
@@ -60,6 +62,7 @@ namespace Oloraculo.Web.Services
         public async Task<int> ImportRatingsOnlyAsync(CancellationToken ct = default)
         {
             await _db.Database.EnsureCreatedAsync(ct);
+            await EnsureAvailabilityTablesAsync(ct);
             await ImportRatingsAsync(ct);
             await _db.SaveChangesAsync(ct);
             return await _db.Ratings.CountAsync(ct);
@@ -238,6 +241,79 @@ namespace Oloraculo.Web.Services
             {
                 if (shouldClose)
                     await connection.CloseAsync();
+            }
+
+            async Task ExecuteSchemaAsync(string sql, CancellationToken token)
+            {
+                await using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                await command.ExecuteNonQueryAsync(token);
+            }
+        }
+
+        private async Task EnsureAvailabilityTablesAsync(CancellationToken ct)
+        {
+            var connection = _db.Database.GetDbConnection();
+            var shouldClose = connection.State != ConnectionState.Open;
+            if (shouldClose)
+                await connection.OpenAsync(ct);
+
+            try
+            {
+                await ExecuteSchemaAsync("""
+                    CREATE TABLE IF NOT EXISTS "AvailabilitySources" (
+                        "Id" INTEGER NOT NULL CONSTRAINT "PK_AvailabilitySources" PRIMARY KEY AUTOINCREMENT,
+                        "Url" TEXT NOT NULL,
+                        "Title" TEXT NULL,
+                        "Publisher" TEXT NULL,
+                        "StatusCode" INTEGER NOT NULL,
+                        "TextHash" TEXT NULL,
+                        "LastFetchedAt" TEXT NOT NULL,
+                        "Error" TEXT NULL
+                    )
+                    """, ct);
+                await ExecuteSchemaAsync("""CREATE UNIQUE INDEX IF NOT EXISTS "IX_AvailabilitySources_Url" ON "AvailabilitySources" ("Url")""", ct);
+
+                await ExecuteSchemaAsync("""
+                    CREATE TABLE IF NOT EXISTS "AvailabilityClaims" (
+                        "Id" INTEGER NOT NULL CONSTRAINT "PK_AvailabilityClaims" PRIMARY KEY AUTOINCREMENT,
+                        "Player" TEXT NOT NULL,
+                        "PlayerKey" TEXT NOT NULL,
+                        "TeamId" TEXT NOT NULL,
+                        "TeamName" TEXT NOT NULL,
+                        "Status" INTEGER NOT NULL,
+                        "Reason" TEXT NOT NULL,
+                        "Confidence" TEXT NOT NULL,
+                        "EvidenceLevel" INTEGER NOT NULL,
+                        "SourceUrl" TEXT NOT NULL,
+                        "Publisher" TEXT NULL,
+                        "SupportingQuote" TEXT NOT NULL,
+                        "ObservedDate" TEXT NULL,
+                        "AffectsPrediction" INTEGER NOT NULL,
+                        "CreatedAt" TEXT NOT NULL
+                    )
+                    """, ct);
+                await ExecuteSchemaAsync("""CREATE INDEX IF NOT EXISTS "IX_AvailabilityClaims_TeamId_PlayerKey_Status_SourceUrl" ON "AvailabilityClaims" ("TeamId", "PlayerKey", "Status", "SourceUrl")""", ct);
+
+                var fixtureColumns = await ColumnsAsync("FixtureContexts", ct);
+                if (fixtureColumns.Count > 0 && !fixtureColumns.Contains("HasAvailabilityNews"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "FixtureContexts" ADD COLUMN "HasAvailabilityNews" INTEGER NOT NULL DEFAULT 0""", ct);
+            }
+            finally
+            {
+                if (shouldClose)
+                    await connection.CloseAsync();
+            }
+
+            async Task<HashSet<string>> ColumnsAsync(string table, CancellationToken token)
+            {
+                var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                await using var command = connection.CreateCommand();
+                command.CommandText = $"PRAGMA table_info(\"{table}\")";
+                await using var reader = await command.ExecuteReaderAsync(token);
+                while (await reader.ReadAsync(token))
+                    columns.Add(reader.GetString(1));
+                return columns;
             }
 
             async Task ExecuteSchemaAsync(string sql, CancellationToken token)

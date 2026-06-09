@@ -5,6 +5,7 @@
 @inject SnapshotService Snapshots
 @inject EvaluationService Evaluation
 @inject ApiFootballService Api
+@inject AvailabilityNewsService Availability
 @inject ISnackbar Snackbar
 
 <PageTitle>Partidos</PageTitle>
@@ -106,6 +107,35 @@
 
                     <PredictionCard Prediction="@_result.BestPrediction" HomeLabel="@_result.HomeTeamName" AwayLabel="@_result.AwayTeamName" />
 
+                    @if (_availabilityClaims.Count > 0)
+                    {
+                        <MudPaper Class="surface-card" Elevation="0">
+                            <MudText Typo="Typo.h6">Disponibilidad verificada</MudText>
+                            <MudTable Items="_availabilityClaims" Dense="true" Hover="true" Elevation="0" Class="dense-table">
+                                <HeaderContent>
+                                    <MudTh>Jugador</MudTh>
+                                    <MudTh>Equipo</MudTh>
+                                    <MudTh>Estado</MudTh>
+                                    <MudTh>Fuente</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Jugador">@context.Player</MudTd>
+                                    <MudTd DataLabel="Equipo"><TeamLabel TeamId="@context.TeamId" Name="@context.TeamName" Compact="true" /></MudTd>
+                                    <MudTd DataLabel="Estado">
+                                        <MudChip T="string" Size="Size.Small" Color="@(context.AffectsPrediction ? Color.Warning : Color.Default)" Variant="Variant.Outlined">@StatusText(context)</MudChip>
+                                        @if (!string.IsNullOrWhiteSpace(context.Reason))
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Reason</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Fuente">
+                                        <MudLink Href="@context.SourceUrl" Target="_blank">@SourceText(context)</MudLink>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudPaper>
+                    }
+
                     <MudPaper Class="surface-card" Elevation="0">
                         <MudText Typo="Typo.h6">Resultado</MudText>
                         <MudGrid Spacing="2" Class="control-grid">
@@ -136,6 +166,7 @@
     private Dictionary<string, string> _names = [];
     private Fixture? _selected;
     private MatchPredictionResult? _result;
+    private List<AvailabilityClaim> _availabilityClaims = [];
     private bool _loaded;
     private bool _busy;
     private bool _saving;
@@ -166,6 +197,7 @@
         try
         {
             _result = await Predictor.PredictFixtureAsync(fixture.Id);
+            _availabilityClaims = (await Availability.ClaimsForFixtureAsync(fixture.Id)).ToList();
         }
         catch (Exception ex)
         {
@@ -210,8 +242,16 @@
         try
         {
             var report = await Api.RefreshFixtureContextAsync(_selected.Id);
-            _note = report.Errors.Count > 0 ? string.Join(" ", report.Errors) : string.Join(" ", report.Notes);
+            AvailabilityRefreshReport? availabilityReport = null;
+            if (!report.IsConfigured)
+                availabilityReport = await Availability.RefreshFixtureContextAsync(_selected.Id);
+
+            var notes = report.Errors.Count > 0 ? string.Join(" ", report.Errors) : string.Join(" ", report.Notes);
+            if (availabilityReport is not null)
+                notes = $"{notes} {string.Join(" ", availabilityReport.Notes)} {string.Join(" ", availabilityReport.Errors)}".Trim();
+            _note = notes;
             _result = await Predictor.PredictFixtureAsync(_selected.Id);
+            _availabilityClaims = (await Availability.ClaimsForFixtureAsync(_selected.Id)).ToList();
             Snackbar.Add(report.Errors.Count > 0 ? "La actualización de API terminó con advertencias." : "Contexto API actualizado.", report.Errors.Count > 0 ? Severity.Warning : Severity.Success);
         }
         catch (Exception ex)
@@ -254,4 +294,6 @@
 
     private string Name(string id) => _names.TryGetValue(id, out var name) ? name : id;
     private string SelectedClass(Fixture fixture) => _selected?.Id == fixture.Id ? "selected" : "";
+    private static string SourceText(AvailabilityClaim claim) => string.IsNullOrWhiteSpace(claim.Publisher) ? claim.SourceUrl : claim.Publisher;
+    private static string StatusText(AvailabilityClaim claim) => claim.AffectsPrediction ? $"{claim.Status} · impacta" : claim.Status.ToString();
 }

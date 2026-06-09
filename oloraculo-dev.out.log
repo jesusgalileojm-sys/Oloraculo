@@ -1,27 +1,27 @@
-Using launch settings from H:\FormerSSDExtra\Source\Oloraculo\Oloraculo.Web\Properties\launchSettings.json...
+Using launch settings from Oloraculo.Web\Properties\launchSettings.json...
 Building...
 info: System.Net.Http.HttpClient.RankingRefreshService.LogicalHandler[100]
       Start processing HTTP request GET https://en.wikipedia.org/w/index.php?*
 info: System.Net.Http.HttpClient.RankingRefreshService.ClientHandler[100]
       Sending HTTP request GET https://en.wikipedia.org/w/index.php?*
 info: System.Net.Http.HttpClient.RankingRefreshService.ClientHandler[101]
-      Received HTTP response headers after 341.1268ms - 200
+      Received HTTP response headers after 356.9082ms - 200
 info: System.Net.Http.HttpClient.RankingRefreshService.LogicalHandler[101]
-      End processing HTTP request after 351.7005ms - 200
+      End processing HTTP request after 367.8737ms - 200
 info: System.Net.Http.HttpClient.RankingRefreshService.LogicalHandler[100]
       Start processing HTTP request GET https://www.international-football.net/elo-ratings-table?*
 info: System.Net.Http.HttpClient.RankingRefreshService.ClientHandler[100]
       Sending HTTP request GET https://www.international-football.net/elo-ratings-table?*
 info: System.Net.Http.HttpClient.RankingRefreshService.ClientHandler[101]
-      Received HTTP response headers after 988.7293ms - 200
+      Received HTTP response headers after 923.7346ms - 200
 info: System.Net.Http.HttpClient.RankingRefreshService.LogicalHandler[101]
-      End processing HTTP request after 988.831ms - 200
+      End processing HTTP request after 923.8301ms - 200
 info: Oloraculo.Web[0]
-      FIFA rankings refreshed: 211 rows dated 2026-04-01.
+      Rankings FIFA actualizados: 211 filas con fecha 2026-04-01.
 info: Oloraculo.Web[0]
-      Elo rankings refreshed: 242 rows dated 2026-06-09.
+      Rankings Elo actualizados: 242 filas con fecha 2026-06-09.
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
       SELECT EXISTS (
           SELECT 1
           FROM "Groups" AS "g")
@@ -342,13 +342,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -462,13 +462,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 12)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 12)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -654,13 +654,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -702,13 +702,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 10)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 10)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -876,13 +876,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -900,13 +900,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 13)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 13)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -1050,13 +1050,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -1098,6 +1098,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+      WHERE "t"."Id" = @__p_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
@@ -1105,12 +1111,6 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 4)], CommandType='Text', CommandTimeout='30']
-      SELECT "t"."Id", "t"."Name", "t"."Source"
-      FROM "Teams" AS "t"
-      WHERE "t"."Id" = @__p_0
-      LIMIT 1
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 9)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -1344,13 +1344,13 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 16)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 16)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
       SELECT "t"."Id", "t"."Name", "t"."Source"
       FROM "Teams" AS "t"
       WHERE "t"."Id" = @__p_0
@@ -1590,7 +1590,7 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       WHERE "t"."Id" = @__p_0
       LIMIT 1
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
       DELETE FROM "Ratings"
       WHERE "Id" = @p0
       RETURNING 1;
@@ -4005,7 +4005,7 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4100,12 +4100,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 6), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 6), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4200,12 +4200,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 12), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 12), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4360,12 +4360,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 6), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 5), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 5), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 6), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4400,12 +4400,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 10), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 10), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4545,12 +4545,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 7), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4565,12 +4565,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 13), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 13), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4690,12 +4690,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 5), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 5), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4730,17 +4730,17 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
+      VALUES (@p0, @p1, @p2, @p3, @p4)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 6), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 4), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
-      INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
-      VALUES (@p0, @p1, @p2, @p3, @p4)
-      RETURNING "Id";
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 9), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -4935,12 +4935,12 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 16), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 16), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = DateTimeOffset), @p1='?' (Size = 16), @p2='?' (Size = 8), @p3='?' (DbType = Int32), @p4='?' (DbType = Double)], CommandType='Text', CommandTimeout='30']
       INSERT INTO "Ratings" ("AsOf", "Source", "TeamId", "Type", "Value")
       VALUES (@p0, @p1, @p2, @p3, @p4)
       RETURNING "Id";
@@ -6158,7 +6158,7 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
           FROM "Fixtures" AS "f"
           WHERE "f"."Group" = '')
 info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5099
+      Now listening on: http://localhost:5235
 info: Microsoft.Hosting.Lifetime[0]
       Application started. Press Ctrl+C to shut down.
 info: Microsoft.Hosting.Lifetime[0]
@@ -6255,6 +6255,284 @@ info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       FROM "Ratings" AS "r"
       ORDER BY "r"."Value" DESC
       LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "f"."Id", "f"."AwayGoals", "f"."AwayTeamId", "f"."City", "f"."Group", "f"."HomeGoals", "f"."HomeTeamId", "f"."IsPlayed", "f"."KickoffUtc", "f"."NeutralVenue", "f"."Source", "f"."Status", "f"."Venue"
+      FROM "Fixtures" AS "f"
+      ORDER BY "f"."Group", "f"."HomeTeamId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "f"."Id", "f"."AwayGoals", "f"."AwayTeamId", "f"."City", "f"."Group", "f"."HomeGoals", "f"."HomeTeamId", "f"."IsPlayed", "f"."KickoffUtc", "f"."NeutralVenue", "f"."Source", "f"."Status", "f"."Venue"
+      FROM "Fixtures" AS "f"
+      ORDER BY "f"."Group", "f"."HomeTeamId"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 6), @__type_1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      WHERE "r"."TeamId" = @__teamId_0 AND "r"."Type" = @__type_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 7), @__type_1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      WHERE "r"."TeamId" = @__teamId_0 AND "r"."Type" = @__type_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 6), @__type_1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      WHERE "r"."TeamId" = @__teamId_0 AND "r"."Type" = @__type_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 7), @__type_1='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      WHERE "r"."TeamId" = @__teamId_0 AND "r"."Type" = @__type_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 6)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AwayGoals", "r"."AwayTeamId", "r"."Date", "r"."HomeGoals", "r"."HomeTeamId", "r"."Neutral", "r"."Source", "r"."Tournament"
+      FROM "Results" AS "r"
+      WHERE "r"."HomeTeamId" = @__teamId_0 OR "r"."AwayTeamId" = @__teamId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__teamId_0='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AwayGoals", "r"."AwayTeamId", "r"."Date", "r"."HomeGoals", "r"."HomeTeamId", "r"."Neutral", "r"."Source", "r"."Tournament"
+      FROM "Results" AS "r"
+      WHERE "r"."HomeTeamId" = @__teamId_0 OR "r"."AwayTeamId" = @__teamId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='Text', CommandTimeout='30']
+      SELECT "f"."FixtureId", "f"."HasAvailabilityNews", "f"."HasLineups", "f"."HasOdds", "f"."Notes", "f"."UnavailableAwayPlayers", "f"."UnavailableHomePlayers", "f"."UpdatedAt"
+      FROM "FixtureContexts" AS "f"
+      WHERE "f"."FixtureId" = @__p_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AwayGoals", "r"."AwayTeamId", "r"."Date", "r"."HomeGoals", "r"."HomeTeamId", "r"."Neutral", "r"."Source", "r"."Tournament"
+      FROM "Results" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__fixture_HomeTeamId_0='?' (Size = 6), @__fixture_AwayTeamId_1='?' (Size = 7)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."AffectsPrediction", "a"."Confidence", "a"."CreatedAt", "a"."EvidenceLevel", "a"."ObservedDate", "a"."Player", "a"."PlayerKey", "a"."Publisher", "a"."Reason", "a"."SourceUrl", "a"."Status", "a"."SupportingQuote", "a"."TeamId", "a"."TeamName"
+      FROM "AvailabilityClaims" AS "a"
+      WHERE "a"."TeamId" = @__fixture_HomeTeamId_0 OR "a"."TeamId" = @__fixture_AwayTeamId_1
+      ORDER BY "a"."AffectsPrediction" DESC, "a"."TeamName", "a"."Player", "a"."Status"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+      ORDER BY "t"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+      ORDER BY "t"."Name"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Results" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Ratings" AS "r"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."Name", "t"."Source"
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "r"."Id", "r"."AsOf", "r"."Source", "r"."TeamId", "r"."Type", "r"."Value"
+      FROM "Ratings" AS "r"
+      ORDER BY "r"."Value" DESC
+      LIMIT @__p_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Teams" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Fixtures" AS "f"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "Results" AS "r"
 info: Microsoft.EntityFrameworkCore.Database.Command[20101]
       Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
       SELECT COUNT(*)

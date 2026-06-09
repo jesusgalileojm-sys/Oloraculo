@@ -14,6 +14,7 @@ using Oloraculo.Web.Services;
 using Oloraculo.Web.Services.Simulation;
 using System.Globalization;
 using System.Net;
+using System.Text.Json;
 
 namespace Oloraculo.Web.Tests;
 
@@ -321,6 +322,211 @@ public class CoreTests
     }
 
     [Fact]
+    public void AvailabilityNews_ParsesStructuredClaims()
+    {
+        var claims = AvailabilityNewsService.ParseClaimsFromJson("""
+            {
+              "claims": [
+                {
+                  "player": "Example Star",
+                  "team": "France",
+                  "status": "ConfirmedOutInjury",
+                  "reason": "knee injury",
+                  "confidence": "high",
+                  "evidenceLevel": "Official",
+                  "supportingText": "France confirmed Example Star will miss the World Cup.",
+                  "sourceUrl": "https://ignored.test",
+                  "publishedOrObservedDate": "2026-06-09"
+                }
+              ]
+            }
+            """, "https://example.test/source", "example.test");
+
+        var claim = Assert.Single(claims);
+        Assert.Equal("Example Star", claim.Player);
+        Assert.Equal("france", claim.TeamId);
+        Assert.Equal(AvailabilityClaimStatus.ConfirmedOutInjury, claim.Status);
+        Assert.Equal(AvailabilityEvidenceLevel.Official, claim.EvidenceLevel);
+        Assert.Equal("https://example.test/source", claim.SourceUrl);
+    }
+
+    [Fact]
+    public void AvailabilityNews_RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<JsonException>(() => AvailabilityNewsService.ParseClaimsFromJson("not json", "https://example.test"));
+    }
+
+    [Fact]
+    public void AvailabilityNews_DoesNotPromoteSoftFitnessLanguage()
+    {
+        var claims = AvailabilityNewsService.ParseClaimsFromJson("""
+            {"claims":[{"player":"Careful Wording","team":"Argentina","status":"FitnessConcern","reason":"race to be fit","confidence":"medium","evidenceLevel":"ReportedUncertain","supportingText":"could miss","sourceUrl":"","publishedOrObservedDate":""}]}
+            """, "https://example.test/source", "example.test");
+
+        AvailabilityNewsService.ApplyPredictionFlags(claims, requireCrossCheck: true);
+
+        Assert.False(Assert.Single(claims).AffectsPrediction);
+    }
+
+    [Fact]
+    public void AvailabilityNews_StrictCountingRequiresOfficialOrTwoReputableSources()
+    {
+        var singleReputable = new AvailabilityClaim
+        {
+            Player = "One Source",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("One Source"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.ReputableReported,
+            SourceUrl = "https://one.test",
+            Publisher = "one.test"
+        };
+        var official = new AvailabilityClaim
+        {
+            Player = "Official Player",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("Official Player"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.Official,
+            SourceUrl = "https://federation.test",
+            Publisher = "federation.test"
+        };
+        var crossA = new AvailabilityClaim
+        {
+            Player = "Cross Checked",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("Cross Checked"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.ReputableReported,
+            SourceUrl = "https://a.test",
+            Publisher = "a.test"
+        };
+        var crossB = new AvailabilityClaim
+        {
+            Player = "Cross Checked",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("Cross Checked"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.ReputableReported,
+            SourceUrl = "https://b.test",
+            Publisher = "b.test"
+        };
+        var claims = new[] { singleReputable, official, crossA, crossB };
+
+        AvailabilityNewsService.ApplyPredictionFlags(claims, requireCrossCheck: true);
+
+        Assert.False(singleReputable.AffectsPrediction);
+        Assert.True(official.AffectsPrediction);
+        Assert.True(crossA.AffectsPrediction);
+        Assert.True(crossB.AffectsPrediction);
+    }
+
+    [Fact]
+    public async Task AvailabilityNews_SourceFetchFailureRecordsWarningAndContinues()
+    {
+        await using var db = await NewDb();
+        var service = new AvailabilityNewsService(
+            new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())) { BaseAddress = new Uri("https://openrouter.test/") },
+            db,
+            AvailabilityOptions(["https://missing.test/article"]));
+
+        var report = await service.RefreshAsync();
+
+        Assert.Equal(1, report.SourcesSkipped);
+        Assert.NotEmpty(report.Errors);
+        Assert.Empty(await db.AvailabilityClaims.ToListAsync());
+    }
+
+    [Fact]
+    public async Task AvailabilityNews_BotGateIsSkippedWithWarning()
+    {
+        await using var db = await NewDb();
+        var service = new AvailabilityNewsService(
+            new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>
+            {
+                ["https://espn.test/article"] = "<html><title>Blocked</title><body>Please enable JavaScript to continue.</body></html>"
+            }))
+            { BaseAddress = new Uri("https://openrouter.test/") },
+            db,
+            AvailabilityOptions(["https://espn.test/article"]));
+
+        var report = await service.RefreshAsync();
+
+        Assert.Equal(1, report.SourcesSkipped);
+        Assert.Contains(report.Errors, e => e.Contains("bloqueada", StringComparison.OrdinalIgnoreCase) || e.Contains("JavaScript", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task AvailabilityNews_OpenRouterFailureKeepsExistingClaims()
+    {
+        await using var db = await NewDb();
+        db.AvailabilityClaims.Add(new AvailabilityClaim
+        {
+            Player = "Existing",
+            PlayerKey = "existing",
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.Official,
+            SourceUrl = "https://source.test/article"
+        });
+        await db.SaveChangesAsync();
+
+        var service = new AvailabilityNewsService(
+            new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>
+            {
+                ["https://source.test/article"] = LongArticleHtml("France confirmed Existing will miss the World Cup.")
+            }))
+            { BaseAddress = new Uri("https://openrouter.test/") },
+            db,
+            AvailabilityOptions(["https://source.test/article"]));
+
+        var report = await service.RefreshAsync();
+
+        Assert.NotEmpty(report.Errors);
+        Assert.Equal("Existing", Assert.Single(await db.AvailabilityClaims.ToListAsync()).Player);
+    }
+
+    [Fact]
+    public async Task AvailabilityNews_RefreshUpdatesFixtureContextAndPredictionSources()
+    {
+        await using var db = await NewDb();
+        db.Teams.AddRange(new Team { Id = "france", Name = "France" }, new Team { Id = "argentina", Name = "Argentina" });
+        db.Fixtures.Add(new Fixture { Id = "f1", Group = "A", HomeTeamId = "france", AwayTeamId = "argentina" });
+        db.Results.AddRange(
+            Result("france", "argentina", 2, 0),
+            Result("france", "argentina", 1, 0),
+            Result("argentina", "france", 1, 2));
+        db.AvailabilityClaims.Add(new AvailabilityClaim
+        {
+            Player = "Official Player",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("Official Player"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.Official,
+            SourceUrl = "https://federation.test",
+            Publisher = "federation.test",
+            AffectsPrediction = true
+        });
+        await db.SaveChangesAsync();
+        var service = new AvailabilityNewsService(new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())), db, AvailabilityOptions([]));
+
+        await service.RefreshFixtureContextAsync("f1");
+        var context = await db.FixtureContexts.FindAsync("f1");
+        var prediction = await new PredictionService(db, SimulationOptions(1, 1)).PredictFixtureAsync("f1");
+
+        Assert.NotNull(context);
+        Assert.Equal(1, context.UnavailableHomePlayers);
+        Assert.True(context.HasAvailabilityNews);
+        Assert.Contains(SourceMetadata.AvailabilityNews, prediction!.Predictions.Single(p => p.PredictorPriority == 5).Sources);
+    }
+
+    [Fact]
     public async Task CsvImport_CreatesTeamsGroupsFixturesRatingsAndResults()
     {
         await using var db = await NewDb();
@@ -490,6 +696,17 @@ public class CoreTests
             SimulationSeed = seed
         });
 
+    private static IOptions<OloraculoConfig> AvailabilityOptions(string[] sources) =>
+        Options.Create(new OloraculoConfig
+        {
+            OpenRouterApiKey = "test-key",
+            OpenRouterBaseUrl = "https://openrouter.test/",
+            OpenRouterModel = "test-model",
+            AvailabilitySourceUrls = sources,
+            AvailabilityMaxArticleChars = 4000,
+            AvailabilityRequireCrossCheck = true
+        });
+
     private static async Task<OloraculoDbContext> ImportedDb()
     {
         var db = await NewDb();
@@ -641,6 +858,13 @@ public class CoreTests
         <h2>World football Elo ratings as on June 5th, 2026</h2>
         <p>1 . Image: Spain Spain 2155 2 . Argentina 2113</p>
         <p>About International-football.net</p>
+        </body></html>
+        """;
+
+    private static string LongArticleHtml(string body) =>
+        $"""
+        <html><head><title>Availability tracker</title></head><body>
+        <article>{body} This article contains enough surrounding text to be accepted by the parser for testing purposes. It repeats the availability details with clear sourcing and additional tournament context so the stripped text is long enough for the service to send to the model.</article>
         </body></html>
         """;
 

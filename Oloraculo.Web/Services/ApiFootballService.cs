@@ -12,12 +12,14 @@ namespace Oloraculo.Web.Services
         private readonly HttpClient _http;
         private readonly OloraculoDbContext _db;
         private readonly OloraculoConfig _config;
+        private readonly AvailabilityNewsService _availability;
         private bool IsConfigured => !string.IsNullOrWhiteSpace(_config.ApiFootballApiKey);
-        public ApiFootballService(HttpClient httpClient, OloraculoDbContext db, IOptions<OloraculoConfig> config)
+        public ApiFootballService(HttpClient httpClient, OloraculoDbContext db, IOptions<OloraculoConfig> config, AvailabilityNewsService availability)
         {
             this._http = httpClient;
             this._db = db;
             this._config = config.Value;
+            this._availability = availability;
         }
 
         public Task<ApiFootballRefreshReport> RefreshAsync(string fixtureId, CancellationToken ct = default) =>
@@ -87,8 +89,20 @@ namespace Oloraculo.Web.Services
                 var liveOddsRows = liveOdds?.Response.Count ?? 0;
 
                 var relevantInjuries = MergeRelevantInjuries(fixture, fixtureInjuries?.Response ?? [], leagueInjuries?.Response ?? []);
-                var homeUnavailable = relevantInjuries.Count(i => TeamNameNormalizer.ToId(i.Team.Name) == fixture.HomeTeamId);
-                var awayUnavailable = relevantInjuries.Count(i => TeamNameNormalizer.ToId(i.Team.Name) == fixture.AwayTeamId);
+                var unavailablePlayers = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var injury in relevantInjuries)
+                {
+                    var teamId = TeamNameNormalizer.ToId(injury.Team.Name);
+                    var playerKey = AvailabilityNewsService.NormalizePlayerKey(injury.Player.Name);
+                    unavailablePlayers.Add($"{teamId}|{playerKey}");
+                }
+
+                var newsClaims = await _availability.AffectingClaimsForTeamsAsync([fixture.HomeTeamId, fixture.AwayTeamId], ct);
+                foreach (var claim in newsClaims)
+                    unavailablePlayers.Add($"{claim.TeamId}|{claim.PlayerKey}");
+
+                var homeUnavailable = unavailablePlayers.Count(k => k.StartsWith(fixture.HomeTeamId + "|", StringComparison.Ordinal));
+                var awayUnavailable = unavailablePlayers.Count(k => k.StartsWith(fixture.AwayTeamId + "|", StringComparison.Ordinal));
                 var context = await _db.FixtureContexts.FindAsync([fixtureId], ct);
                 if (context is null)
                 {
@@ -100,11 +114,14 @@ namespace Oloraculo.Web.Services
                 context.UnavailableAwayPlayers = awayUnavailable;
                 context.HasLineups = lineupRows > 0;
                 context.HasOdds = preMatchOddsRows > 0 || liveOddsRows > 0;
-                context.Notes = $"Actualizado desde API-Football. lesiones del partido={fixtureInjuryRows}; lesiones de la liga={leagueInjuryRows}; alineaciones={lineupRows}; cuotas previas={preMatchOddsRows}; cuotas en vivo={liveOddsRows}.";
+                context.HasAvailabilityNews = newsClaims.Count > 0;
+                context.Notes = $"Actualizado desde API-Football. lesiones del partido={fixtureInjuryRows}; lesiones de la liga={leagueInjuryRows}; noticias confirmadas={newsClaims.Count}; alineaciones={lineupRows}; cuotas previas={preMatchOddsRows}; cuotas en vivo={liveOddsRows}.";
                 context.UpdatedAt = DateTimeOffset.UtcNow;
                 await _db.SaveChangesAsync(ct);
 
                 notes.Add($"Filas de lesiones del partido: {fixtureInjuryRows}. Filas de lesiones de liga/temporada: {leagueInjuryRows}. Bajas o dudas relevantes guardadas: equipo A {homeUnavailable}, equipo B {awayUnavailable}.");
+                if (newsClaims.Count > 0)
+                    notes.Add($"Noticias confirmadas incluidas en el contexto: {newsClaims.Count}.");
                 notes.Add($"Filas de alineaciones: {lineupRows}. Filas de cuotas previas: {preMatchOddsRows}. Filas de cuotas en vivo: {liveOddsRows}.");
                 if (fixtureInjuryRows == 0 && leagueInjuryRows == 0)
                     notes.Add("No llegaron filas de lesiones. API-Football puede soportar lesiones para la competencia, pero todavía no tener bajas asociadas.");

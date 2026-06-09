@@ -71,6 +71,10 @@ namespace Oloraculo.Web.Predictors
             ]);
 
             var degraded = degradedGoalModel || !appliedContext;
+            var sources = new List<SourceMetadata> { SourceMetadata.HistoricalResultsCsv, SourceMetadata.ApiFootball };
+            if (context.FixtureContext?.HasAvailabilityNews == true)
+                sources.Add(SourceMetadata.AvailabilityNews);
+
             return new MatchPrediction
             {
                 PredictorName = Name,
@@ -89,7 +93,7 @@ namespace Oloraculo.Web.Predictors
                 Drivers = drivers.Count == 0 ? ["No se aplicó ajuste de contexto"] : drivers,
                 FeaturesUsed = usedFeatures,
                 FeaturesMissing = missingFeatures,
-                Sources = [SourceMetadata.HistoricalResultsCsv, SourceMetadata.ApiFootball],
+                Sources = sources,
                 Degraded = degraded
             };
         }

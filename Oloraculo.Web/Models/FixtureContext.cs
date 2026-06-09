@@ -7,7 +7,8 @@
         public int UnavailableAwayPlayers { get; set; }
         public bool HasLineups { get; set; }
         public bool HasOdds { get; set; }
-        public string Notes { get; set; }
+        public bool HasAvailabilityNews { get; set; }
+        public string Notes { get; set; } = "";
         public DateTimeOffset UpdatedAt { get; set; }
 
     }

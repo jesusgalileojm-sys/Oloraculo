@@ -15,7 +15,7 @@
     @if (Prediction.ExpectedHomeGoals.HasValue && Prediction.ExpectedAwayGoals.HasValue)
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary">
-            xG <TeamLabel TeamId="@Prediction.HomeTeamId" Name="@HomeLabel" Compact="true" /> @Prediction.ExpectedHomeGoals.Value.ToString("0.00")
+            Goles esperados <TeamLabel TeamId="@Prediction.HomeTeamId" Name="@HomeLabel" Compact="true" /> @Prediction.ExpectedHomeGoals.Value.ToString("0.00")
             - @Prediction.ExpectedAwayGoals.Value.ToString("0.00") <TeamLabel TeamId="@Prediction.AwayTeamId" Name="@AwayLabel" Compact="true" />
             @if (Prediction.MostLikelyScore.HasValue)
             {

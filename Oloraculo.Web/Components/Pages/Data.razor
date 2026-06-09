@@ -3,6 +3,7 @@
 @inject CsvImportService Importer
 @inject RankingRefreshService Rankings
 @inject ApiFootballService Api
+@inject AvailabilityNewsService Availability
 @inject OloraculoDbContext Db
 @inject ISnackbar Snackbar
 
@@ -24,8 +25,9 @@
             <BusyButton Text="Reimportar CSV" BusyText="Importando" IsBusy="_busy" Icon="@Icons.Material.Filled.UploadFile" OnClick="ImportAll" />
             <BusyButton Text="Actualizar rankings" BusyText="Actualizando" IsBusy="_rankingsBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Sync" OnClick="RefreshRankings" />
             <BusyButton Text="Actualizar partidos API-Football" BusyText="Actualizando" IsBusy="_apiBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.CloudSync" OnClick="RefreshApi" />
+            <BusyButton Text="Actualizar disponibilidad" BusyText="Analizando" IsBusy="_availabilityBusy" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.FactCheck" OnClick="RefreshAvailability" />
         </MudStack>
-        @if (_busy || _rankingsBusy || _apiBusy)
+        @if (_busy || _rankingsBusy || _apiBusy || _availabilityBusy)
         {
             <MudProgressLinear Class="inline-progress" Color="Color.Primary" Indeterminate="true" />
         }
@@ -51,6 +53,16 @@
         {
             <MudAlert Class="mt-2" Severity="@(_apiReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">@string.Join(" ", _apiReport.Notes)</MudAlert>
             @foreach (var error in _apiReport.Errors)
+            {
+                <MudAlert Class="mt-2" Severity="Severity.Warning" Variant="Variant.Outlined">@error</MudAlert>
+            }
+        }
+        @if (_availabilityReport is not null)
+        {
+            <MudAlert Class="mt-2" Severity="@(_availabilityReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">
+                Fuentes leídas: @_availabilityReport.SourcesFetched. Fuentes omitidas: @_availabilityReport.SourcesSkipped. Reclamos guardados: @_availabilityReport.ClaimsSaved. Reclamos que afectan predicciones: @_availabilityReport.ClaimsAffectingPredictions. Contextos actualizados: @_availabilityReport.ContextRowsUpdated. @string.Join(" ", _availabilityReport.Notes)
+            </MudAlert>
+            @foreach (var error in _availabilityReport.Errors)
             {
                 <MudAlert Class="mt-2" Severity="Severity.Warning" Variant="Variant.Outlined">@error</MudAlert>
             }
@@ -95,10 +107,12 @@
     private bool _busy;
     private bool _apiBusy;
     private bool _rankingsBusy;
+    private bool _availabilityBusy;
     private bool _loaded;
     private CsvImportReport? _report;
     private RankingRefreshReport? _rankingsReport;
     private ApiFootballRefreshReport? _apiReport;
+    private AvailabilityRefreshReport? _availabilityReport;
     private int _teams;
     private int _fixtures;
     private int _ratings;
@@ -174,6 +188,27 @@
         finally
         {
             _rankingsBusy = false;
+        }
+    }
+
+    private async Task RefreshAvailability()
+    {
+        _availabilityBusy = true;
+        _error = "";
+        try
+        {
+            _availabilityReport = await Availability.RefreshAsync();
+            await Load();
+            Snackbar.Add(_availabilityReport.Errors.Count > 0 ? "La actualización de disponibilidad terminó con advertencias." : "Disponibilidad actualizada.", _availabilityReport.Errors.Count > 0 ? Severity.Warning : Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            Snackbar.Add("No se pudo actualizar la disponibilidad.", Severity.Error);
+        }
+        finally
+        {
+            _availabilityBusy = false;
         }
     }
 

@@ -18,6 +18,8 @@ namespace Oloraculo.Web.DAL
         public DbSet<Rating> Ratings => Set<Rating>();
         public DbSet<FixtureContext> FixtureContexts => Set<FixtureContext>();
         public DbSet<ApiMapping> ApiMappings => Set<ApiMapping>();
+        public DbSet<AvailabilitySource> AvailabilitySources => Set<AvailabilitySource>();
+        public DbSet<AvailabilityClaim> AvailabilityClaims => Set<AvailabilityClaim>();
         public DbSet<PredictionSnapshot> Snapshots => Set<PredictionSnapshot>();
         public DbSet<PredictionEvaluation> Evaluations => Set<PredictionEvaluation>();
 
@@ -41,6 +43,8 @@ namespace Oloraculo.Web.DAL
                     value => JsonSerializer.Deserialize<List<string>>(value, (JsonSerializerOptions?)null) ?? new List<string>())
                 .Metadata.SetValueComparer(teamIdsComparer);
             modelBuilder.Entity<ApiMapping>().HasIndex(m => m.LocalFixtureId).IsUnique();
+            modelBuilder.Entity<AvailabilitySource>().HasIndex(s => s.Url).IsUnique();
+            modelBuilder.Entity<AvailabilityClaim>().HasIndex(c => new { c.TeamId, c.PlayerKey, c.Status, c.SourceUrl });
             modelBuilder.Entity<PredictionSnapshot>().HasIndex(s => new { s.Kind, s.FixtureId, s.CreatedAt });
         }
     }

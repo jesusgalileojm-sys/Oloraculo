@@ -45,6 +45,13 @@ builder.Services.AddHttpClient<ApiFootballService>((sp, client) =>
         client.DefaultRequestHeaders.Add("x-apisports-key", options.ApiFootballApiKey);
     }
 });
+builder.Services.AddHttpClient<AvailabilityNewsService>((sp, client) =>
+{
+    var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OloraculoConfig>>().Value;
+    client.BaseAddress = new Uri(options.OpenRouterBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(options.AvailabilityRefreshUserAgent);
+});
 
 var app = builder.Build();
 
