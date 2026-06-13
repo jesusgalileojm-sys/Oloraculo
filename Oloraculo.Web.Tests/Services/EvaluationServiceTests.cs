@@ -50,4 +50,127 @@ public class EvaluationServiceTests : TestFixtures
         Assert.Equal(1, fixture.AwayGoals);
     }
 
+    [Fact]
+    public async Task Evaluation_BulkEvaluatesPlayedFixturesWithPriorSnapshots()
+    {
+        await using var db = await NewDb();
+        db.Fixtures.Add(PlayedFixture("f1", 2, 1));
+        db.Snapshots.Add(Snapshot("f1", DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
+        await db.SaveChangesAsync();
+
+        var report = await new EvaluationService(db).EvaluateUnevaluatedPlayedFixturesAsync();
+
+        Assert.Equal(1, report.Evaluated);
+        Assert.Equal(0, report.SkippedAlreadyEvaluated);
+        Assert.Equal(0, report.SkippedWithoutSnapshot);
+        Assert.Equal(1, await db.Evaluations.CountAsync(e => e.FixtureId == "f1"));
+    }
+
+    [Fact]
+    public async Task Evaluation_BulkSkipsFixturesWithoutScores()
+    {
+        await using var db = await NewDb();
+        db.Fixtures.Add(new Fixture { Id = "f1", Group = "A", HomeTeamId = "a", AwayTeamId = "b", IsPlayed = true });
+        db.Snapshots.Add(Snapshot("f1"));
+        await db.SaveChangesAsync();
+
+        var report = await new EvaluationService(db).EvaluateUnevaluatedPlayedFixturesAsync();
+
+        Assert.Equal(0, report.Evaluated);
+        Assert.Equal(0, await db.Evaluations.CountAsync());
+    }
+
+    [Fact]
+    public async Task Evaluation_BulkSkipsAlreadyEvaluatedFixtures()
+    {
+        await using var db = await NewDb();
+        db.Fixtures.Add(PlayedFixture("f1", 2, 1));
+        db.Snapshots.Add(Snapshot("f1"));
+        db.Evaluations.Add(Evaluation("f1"));
+        await db.SaveChangesAsync();
+
+        var report = await new EvaluationService(db).EvaluateUnevaluatedPlayedFixturesAsync();
+
+        Assert.Equal(0, report.Evaluated);
+        Assert.Equal(1, report.SkippedAlreadyEvaluated);
+        Assert.Equal(1, await db.Evaluations.CountAsync(e => e.FixtureId == "f1"));
+    }
+
+    [Fact]
+    public async Task Evaluation_BulkSkipsPlayedFixturesWithoutPriorSnapshots()
+    {
+        await using var db = await NewDb();
+        db.Fixtures.Add(PlayedFixture("f1", 2, 1));
+        await db.SaveChangesAsync();
+
+        var report = await new EvaluationService(db).EvaluateUnevaluatedPlayedFixturesAsync();
+
+        Assert.Equal(0, report.Evaluated);
+        Assert.Equal(1, report.SkippedWithoutSnapshot);
+        Assert.Equal(0, await db.Evaluations.CountAsync());
+    }
+
+    [Fact]
+    public async Task Evaluation_BulkEvaluationIsIdempotent()
+    {
+        await using var db = await NewDb();
+        db.Fixtures.Add(PlayedFixture("f1", 2, 1));
+        db.Snapshots.Add(Snapshot("f1"));
+        await db.SaveChangesAsync();
+        var service = new EvaluationService(db);
+
+        var first = await service.EvaluateUnevaluatedPlayedFixturesAsync();
+        var second = await service.EvaluateUnevaluatedPlayedFixturesAsync();
+
+        Assert.Equal(1, first.Evaluated);
+        Assert.Equal(0, second.Evaluated);
+        Assert.Equal(1, second.SkippedAlreadyEvaluated);
+        Assert.Equal(1, await db.Evaluations.CountAsync(e => e.FixtureId == "f1"));
+    }
+
+    private static Fixture PlayedFixture(string id, int homeGoals, int awayGoals) => new()
+    {
+        Id = id,
+        Group = "A",
+        HomeTeamId = "a",
+        AwayTeamId = "b",
+        IsPlayed = true,
+        HomeGoals = homeGoals,
+        AwayGoals = awayGoals,
+        NeutralVenue = true
+    };
+
+    private static PredictionSnapshot Snapshot(string fixtureId, DateTimeOffset? createdAt = null) => new()
+    {
+        Kind = "match",
+        FixtureId = fixtureId,
+        ModelName = "Oráculo final",
+        CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
+        InputSummaryHash = "hash",
+        PayloadJson = "{}",
+        Explanation = "test",
+        HomeWin = .6,
+        Draw = .2,
+        AwayWin = .2
+    };
+
+    private static PredictionEvaluation Evaluation(string fixtureId) => new()
+    {
+        ModelName = "Oráculo final",
+        FixtureId = fixtureId,
+        HomeTeamId = "a",
+        AwayTeamId = "b",
+        HomeGoals = 2,
+        AwayGoals = 1,
+        HomeWin = .6,
+        Draw = .2,
+        AwayWin = .2,
+        Actual = "Home",
+        BrierScore = 0,
+        RankedProbabilityScore = 0,
+        LogLoss = 0,
+        TopPickCorrect = true,
+        PredictedAt = DateTimeOffset.UtcNow
+    };
+
 }

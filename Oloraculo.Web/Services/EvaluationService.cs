@@ -62,6 +62,39 @@ namespace Oloraculo.Web.Services
             return 1;
         }
 
+        public async Task<FixtureEvaluationRefreshReport> EvaluateUnevaluatedPlayedFixturesAsync(CancellationToken ct = default)
+        {
+            var fixtures = await _db.Fixtures
+                .Where(f => f.IsPlayed && f.HomeGoals.HasValue && f.AwayGoals.HasValue)
+                .ToListAsync(ct);
+
+            var evaluated = 0;
+            var skippedAlreadyEvaluated = 0;
+            var skippedWithoutSnapshot = 0;
+
+            foreach (var fixture in fixtures)
+            {
+                var hasEvaluation = await _db.Evaluations
+                    .AnyAsync(e => e.FixtureId == fixture.Id, ct);
+                if (hasEvaluation)
+                {
+                    skippedAlreadyEvaluated++;
+                    continue;
+                }
+
+                var count = await EvaluateLatestSnapshotAsync(fixture, fixture.HomeGoals!.Value, fixture.AwayGoals!.Value, ct);
+                if (count == 0)
+                    skippedWithoutSnapshot++;
+                else
+                    evaluated += count;
+            }
+
+            return new FixtureEvaluationRefreshReport(
+                evaluated,
+                skippedAlreadyEvaluated,
+                skippedWithoutSnapshot);
+        }
+
         public async Task<IReadOnlyList<ModelPerformanceRow>> PerformanceAsync(CancellationToken ct = default)
         {
             var rows = await _db.Evaluations.AsNoTracking().ToListAsync(ct);
@@ -92,4 +125,9 @@ namespace Oloraculo.Web.Services
         public static string OutcomeFromGoals(int homeGoals, int awayGoals) =>
             homeGoals > awayGoals ? "Home" : awayGoals > homeGoals ? "Away" : "Draw";
     }
+
+    public sealed record FixtureEvaluationRefreshReport(
+        int Evaluated,
+        int SkippedAlreadyEvaluated,
+        int SkippedWithoutSnapshot);
 }

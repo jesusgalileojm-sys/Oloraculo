@@ -16,6 +16,7 @@ using Oloraculo.Web.Services.Simulation;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Oloraculo.Web.Tests;
 
@@ -70,6 +71,93 @@ public class ReadmeSnapshotExportServiceTests : TestFixtures
 
         Assert.True(updated.IndexOf("fresh", StringComparison.Ordinal) < updated.IndexOf("# Oloraculo", StringComparison.Ordinal));
         Assert.True(updated.IndexOf("fresh", StringComparison.Ordinal) > updated.IndexOf("## Video", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ReadmeExporter_EvaluatesPlayedFixturesBeforeCreatingFreshSnapshots()
+    {
+        var root = NewTempRoot();
+        try
+        {
+            var webRoot = Path.Combine(root, "Oloraculo.Web");
+            var dataRoot = Path.Combine(webRoot, "Data");
+            Directory.CreateDirectory(dataRoot);
+            File.WriteAllText(Path.Combine(root, "Oloraculo.sln"), "");
+            File.WriteAllText(Path.Combine(root, "README.md"), "# Holi.\n\n# Oloraculo\n");
+            foreach (var file in Directory.GetFiles(Path.Combine(WebProjectRoot(), "Data"), "*.csv"))
+                File.Copy(file, Path.Combine(dataRoot, Path.GetFileName(file)));
+
+            await using var db = await NewDb();
+            var environment = new TestEnvironment(webRoot);
+            var options = Options.Create(new OloraculoConfig
+            {
+                SimulationCount = 1,
+                SimulationSeed = 1,
+                RecentResultCount = 8,
+                GoalModelYearsWindow = 3,
+                ApiFootballBaseUrl = "https://api.test/",
+                ApiFootballLeagueId = 1,
+                ApiFootballSeason = 2026,
+                OpenRouterBaseUrl = "https://openrouter.test/",
+                AvailabilitySourceUrls = [],
+                EloRefreshMaxLookbackDays = 0
+            });
+            var importer = new CsvImportService(db, environment);
+            await importer.ImportAllAsync();
+            var fixture = await db.Fixtures.OrderBy(f => f.Id).FirstAsync();
+            fixture.IsPlayed = true;
+            fixture.HomeGoals = 2;
+            fixture.AwayGoals = 1;
+            var oldCreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
+            db.Snapshots.Add(new PredictionSnapshot
+            {
+                Kind = "match",
+                FixtureId = fixture.Id,
+                ModelName = "Oráculo final",
+                CreatedAt = oldCreatedAt,
+                InputSummaryHash = "old",
+                PayloadJson = "{}",
+                Explanation = "old prediction",
+                HomeWin = .6,
+                Draw = .2,
+                AwayWin = .2
+            });
+            await db.SaveChangesAsync();
+
+            var availability = new AvailabilityNewsService(
+                new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())) { BaseAddress = new Uri("https://openrouter.test/") },
+                db,
+                options);
+            var api = new ApiFootballService(
+                new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())) { BaseAddress = new Uri("https://api.test/") },
+                db,
+                options,
+                availability);
+            var snapshots = new SnapshotService(db);
+            var prediction = new PredictionService(db, options);
+            var exporter = new ReadmeSnapshotExportService(
+                db,
+                importer,
+                new RankingRefreshService(new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())), environment, options),
+                api,
+                availability,
+                prediction,
+                new EvaluationService(db),
+                snapshots,
+                new SimulationService(db, prediction, snapshots, options),
+                environment,
+                NullLogger<ReadmeSnapshotExportService>.Instance);
+
+            await exporter.ExportAsync();
+
+            var evaluation = Assert.Single(await db.Evaluations.Where(e => e.FixtureId == fixture.Id).ToListAsync());
+            Assert.Equal(oldCreatedAt, evaluation.PredictedAt);
+            Assert.True(await db.Snapshots.CountAsync(s => s.Kind == "match" && s.FixtureId == fixture.Id) > 1);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     [Fact]

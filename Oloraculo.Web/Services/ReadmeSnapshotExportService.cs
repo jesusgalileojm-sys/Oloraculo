@@ -20,6 +20,7 @@ namespace Oloraculo.Web.Services
         private readonly ApiFootballService _api;
         private readonly AvailabilityNewsService _availability;
         private readonly PredictionService _prediction;
+        private readonly EvaluationService _evaluation;
         private readonly SnapshotService _snapshots;
         private readonly SimulationService _simulation;
         private readonly IWebHostEnvironment _environment;
@@ -32,6 +33,7 @@ namespace Oloraculo.Web.Services
             ApiFootballService api,
             AvailabilityNewsService availability,
             PredictionService prediction,
+            EvaluationService evaluation,
             SnapshotService snapshots,
             SimulationService simulation,
             IWebHostEnvironment environment,
@@ -43,6 +45,7 @@ namespace Oloraculo.Web.Services
             _api = api;
             _availability = availability;
             _prediction = prediction;
+            _evaluation = evaluation;
             _snapshots = snapshots;
             _simulation = simulation;
             _environment = environment;
@@ -66,6 +69,13 @@ namespace Oloraculo.Web.Services
             LogReport("availability roles", roles.Notes, roles.Errors);
 
             await _importer.ImportIfNeededAsync(ct);
+
+            var evaluation = await _evaluation.EvaluateUnevaluatedPlayedFixturesAsync(ct);
+            _logger.LogInformation(
+                "Fixture evaluation refresh: evaluated={Evaluated}; skipped already evaluated={SkippedAlreadyEvaluated}; skipped without snapshot={SkippedWithoutSnapshot}.",
+                evaluation.Evaluated,
+                evaluation.SkippedAlreadyEvaluated,
+                evaluation.SkippedWithoutSnapshot);
 
             var fixtures = await _db.Fixtures.AsNoTracking().ToListAsync(ct);
             var orderedFixtures = OrderedFixtures(fixtures).ToList();
