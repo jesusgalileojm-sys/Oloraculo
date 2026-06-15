@@ -13,13 +13,15 @@ namespace Oloraculo.Web.Services
         private readonly OloraculoDbContext _db;
         private readonly OloraculoConfig _config;
         private readonly AvailabilityNewsService _availability;
+        private readonly PlayerImpactService? _impact;
         private bool IsConfigured => !string.IsNullOrWhiteSpace(_config.ApiFootballApiKey);
-        public ApiFootballService(HttpClient httpClient, OloraculoDbContext db, IOptions<OloraculoConfig> config, AvailabilityNewsService availability)
+        public ApiFootballService(HttpClient httpClient, OloraculoDbContext db, IOptions<OloraculoConfig> config, AvailabilityNewsService availability, PlayerImpactService? impact = null)
         {
             this._http = httpClient;
             this._db = db;
             this._config = config.Value;
             this._availability = availability;
+            _impact = impact;
         }
 
         public Task<ApiFootballRefreshReport> RefreshAsync(string fixtureId, CancellationToken ct = default) =>
@@ -48,7 +50,7 @@ namespace Oloraculo.Web.Services
                 }
 
                 var coverage = await GetApiAsync<ApiLeagueResponse>(
-                    $"leagues?id={_config.ApiFootballLeagueId}&season={_config.ApiFootballSeason}",
+                    ApiFootballEndpoints.LeagueCoverage(_config.ApiFootballLeagueId, _config.ApiFootballSeason),
                     "cobertura",
                     errors,
                     ct);
@@ -57,27 +59,27 @@ namespace Oloraculo.Web.Services
                     notes.Add($"La cobertura indica lesiones={coverageInfo.Injuries}, cuotas={coverageInfo.Odds}, alineaciones={coverageInfo.Fixtures.Lineups}.");
 
                 var fixtureInjuries = await GetApiAsync<ApiInjuryResponse>(
-                    $"injuries?fixture={mapping.ExternalFixtureId}",
+                    ApiFootballEndpoints.FixtureInjuries(mapping.ExternalFixtureId),
                     "lesiones del partido",
                     errors,
                     ct);
                 var leagueInjuries = await GetApiAsync<ApiInjuryResponse>(
-                    $"injuries?league={_config.ApiFootballLeagueId}&season={_config.ApiFootballSeason}",
+                    ApiFootballEndpoints.LeagueInjuries(_config.ApiFootballLeagueId, _config.ApiFootballSeason),
                     "lesiones de la liga",
                     errors,
                     ct);
                 var lineups = await GetApiAsync<ApiLineupResponse>(
-                    $"fixtures/lineups?fixture={mapping.ExternalFixtureId}",
+                    ApiFootballEndpoints.FixtureLineups(mapping.ExternalFixtureId),
                     "alineaciones",
                     errors,
                     ct);
                 var preMatchOdds = await GetApiAsync<ApiOddsResponse>(
-                    $"odds?fixture={mapping.ExternalFixtureId}",
+                    ApiFootballEndpoints.PreMatchOdds(mapping.ExternalFixtureId),
                     "cuotas previas",
                     errors,
                     ct);
                 var liveOdds = await GetApiAsync<ApiOddsResponse>(
-                    $"odds/live?fixture={mapping.ExternalFixtureId}",
+                    ApiFootballEndpoints.LiveOdds(mapping.ExternalFixtureId),
                     "cuotas en vivo",
                     errors,
                     ct);
@@ -89,29 +91,30 @@ namespace Oloraculo.Web.Services
                 var liveOddsRows = liveOdds?.Response.Count ?? 0;
 
                 var relevantInjuries = MergeRelevantInjuries(fixture, fixtureInjuries?.Response ?? [], leagueInjuries?.Response ?? []);
-                var unavailablePlayers = new HashSet<string>(StringComparer.Ordinal);
-                var unavailableRoles = new Dictionary<string, string>(StringComparer.Ordinal);
+                var externalUnavailablePlayers = new List<UnavailablePlayerRole>();
+                var candidatesByTeam = new Dictionary<long, List<PlayerRoleCandidate>>();
                 foreach (var injury in relevantInjuries)
                 {
                     var teamId = TeamNameNormalizer.ToId(injury.Team.Name);
                     var playerKey = AvailabilityNewsService.NormalizePlayerKey(injury.Player.Name);
-                    var key = $"{teamId}|{playerKey}";
-                    unavailablePlayers.Add(key);
-                    unavailableRoles[key] = "Unknown";
+                    var candidates = injury.Team.Id > 0
+                        ? await PlayerCandidatesForTeamAsync(injury.Team.Id, candidatesByTeam, errors, ct)
+                        : [];
+                    var role = MatchPlayerRole(injury.Player.Id, injury.Player.Name, candidates);
+                    var position = AvailabilityNewsService.NormalizePosition(role?.Position);
+                    var impact = await CalculateImpactAsync(teamId, injury.Player.Name, playerKey, position, role?.Statistics, ct);
+                    externalUnavailablePlayers.Add(new UnavailablePlayerRole(
+                        teamId,
+                        playerKey,
+                        position,
+                        impact.Attack,
+                        impact.Defense,
+                        injury.Player.Name,
+                        impact.Source));
                 }
 
                 var newsClaims = await _availability.AffectingClaimsForTeamsAsync([fixture.HomeTeamId, fixture.AwayTeamId], ct);
-                foreach (var claim in newsClaims)
-                {
-                    var key = $"{claim.TeamId}|{claim.PlayerKey}";
-                    unavailablePlayers.Add(key);
-                    unavailableRoles[key] = claim.Position;
-                }
-
-                var homeUnavailable = unavailablePlayers.Count(k => k.StartsWith(fixture.HomeTeamId + "|", StringComparison.Ordinal));
-                var awayUnavailable = unavailablePlayers.Count(k => k.StartsWith(fixture.AwayTeamId + "|", StringComparison.Ordinal));
-                var homeImpacts = AvailabilityNewsService.SumImpacts(unavailableRoles.Where(p => p.Key.StartsWith(fixture.HomeTeamId + "|", StringComparison.Ordinal)).Select(p => p.Value));
-                var awayImpacts = AvailabilityNewsService.SumImpacts(unavailableRoles.Where(p => p.Key.StartsWith(fixture.AwayTeamId + "|", StringComparison.Ordinal)).Select(p => p.Value));
+                await _availability.RefreshFixtureContextCountsAsync(fixtureId, externalUnavailablePlayers, ct);
                 var context = await _db.FixtureContexts.FindAsync([fixtureId], ct);
                 if (context is null)
                 {
@@ -119,22 +122,17 @@ namespace Oloraculo.Web.Services
                     _db.FixtureContexts.Add(context);
                 }
 
-                context.UnavailableHomePlayers = homeUnavailable;
-                context.UnavailableAwayPlayers = awayUnavailable;
-                context.UnavailableHomeAttackImpact = homeImpacts.Attack;
-                context.UnavailableHomeDefenseImpact = homeImpacts.Defense;
-                context.UnavailableAwayAttackImpact = awayImpacts.Attack;
-                context.UnavailableAwayDefenseImpact = awayImpacts.Defense;
                 context.HasLineups = lineupRows > 0;
                 context.HasOdds = preMatchOddsRows > 0 || liveOddsRows > 0;
-                context.HasAvailabilityNews = newsClaims.Count > 0;
-                context.Notes = $"Actualizado desde API-Football. lesiones del partido={fixtureInjuryRows}; lesiones de la liga={leagueInjuryRows}; noticias confirmadas={newsClaims.Count}; roles matcheados={newsClaims.Count(c => c.Position != "Unknown")}; roles desconocidos={newsClaims.Count(c => c.Position == "Unknown")}; alineaciones={lineupRows}; cuotas previas={preMatchOddsRows}; cuotas en vivo={liveOddsRows}.";
+                context.Notes = $"Actualizado desde API-Football. lesiones del partido={fixtureInjuryRows}; lesiones de la liga={leagueInjuryRows}; noticias confirmadas={newsClaims.Count}; roles noticias matcheados={newsClaims.Count(c => c.Position != PlayerPositions.Unknown)}; roles noticias desconocidos={newsClaims.Count(c => c.Position == PlayerPositions.Unknown)}; impactos API enriquecidos={externalUnavailablePlayers.Count(p => !PlayerImpactSources.IsFallback(p.ImpactSource))}; alineaciones={lineupRows}; cuotas previas={preMatchOddsRows}; cuotas en vivo={liveOddsRows}.";
                 context.UpdatedAt = DateTimeOffset.UtcNow;
                 await _db.SaveChangesAsync(ct);
 
-                notes.Add($"Filas de lesiones del partido: {fixtureInjuryRows}. Filas de lesiones de liga/temporada: {leagueInjuryRows}. Bajas o dudas relevantes guardadas: equipo A {homeUnavailable}, equipo B {awayUnavailable}.");
+                notes.Add($"Filas de lesiones del partido: {fixtureInjuryRows}. Filas de lesiones de liga/temporada: {leagueInjuryRows}. Bajas o dudas relevantes guardadas: equipo A {context.UnavailableHomePlayers}, equipo B {context.UnavailableAwayPlayers}.");
                 if (newsClaims.Count > 0)
                     notes.Add($"Noticias confirmadas incluidas en el contexto: {newsClaims.Count}.");
+                if (externalUnavailablePlayers.Count > 0)
+                    notes.Add($"Lesiones API-Football con impacto enriquecido: {externalUnavailablePlayers.Count(p => !PlayerImpactSources.IsFallback(p.ImpactSource))}/{externalUnavailablePlayers.Count}.");
                 notes.Add($"Filas de alineaciones: {lineupRows}. Filas de cuotas previas: {preMatchOddsRows}. Filas de cuotas en vivo: {liveOddsRows}.");
                 if (fixtureInjuryRows == 0 && leagueInjuryRows == 0)
                     notes.Add("No llegaron filas de lesiones. API-Football puede soportar lesiones para la competencia, pero todavía no tener bajas asociadas.");
@@ -146,12 +144,14 @@ namespace Oloraculo.Web.Services
                 return new ApiFootballRefreshReport
                 {
                     IsConfigured = true,
-                    ContextRows = homeUnavailable + awayUnavailable,
+                    ContextRows = context.UnavailableHomePlayers + context.UnavailableAwayPlayers,
                     FixtureInjuryRows = fixtureInjuryRows,
                     LeagueInjuryRows = leagueInjuryRows,
                     LineupRows = lineupRows,
                     PreMatchOddsRows = preMatchOddsRows,
                     LiveOddsRows = liveOddsRows,
+                    ImpactMatchedPlayers = externalUnavailablePlayers.Count(p => !PlayerImpactSources.IsFallback(p.ImpactSource)),
+                    ImpactFallbackPlayers = externalUnavailablePlayers.Count(p => PlayerImpactSources.IsFallback(p.ImpactSource)),
                     Notes = notes,
                     Errors = errors
                 };
@@ -172,7 +172,7 @@ namespace Oloraculo.Web.Services
             try
             {
                 var response = await _http.GetFromJsonAsync<ApiFixtureResponse>(
-                    $"fixtures?league={_config.ApiFootballLeagueId}&season={_config.ApiFootballSeason}&timezone=UTC", ct);
+                    ApiFootballEndpoints.Fixtures(_config.ApiFootballLeagueId, _config.ApiFootballSeason), ct);
                 var items = response?.Response ?? [];
                 var local = await _db.Fixtures.ToListAsync(ct);
                 var byPair = local.ToDictionary(f => PairKey(f.HomeTeamId, f.AwayTeamId));
@@ -237,7 +237,7 @@ namespace Oloraculo.Web.Services
                 return new AvailabilityRefreshReport { IsConfigured = true, Notes = ["No hay reclamos de disponibilidad para enriquecer con roles."] };
 
             var apiTeams = await GetApiAsync<ApiTeamListResponse>(
-                $"teams?league={_config.ApiFootballLeagueId}&season={_config.ApiFootballSeason}",
+                ApiFootballEndpoints.Teams(_config.ApiFootballLeagueId, _config.ApiFootballSeason),
                 "equipos API-Football",
                 errors,
                 ct);
@@ -246,31 +246,30 @@ namespace Oloraculo.Web.Services
                 .ToDictionary(g => g.Key, g => g.First().Team.Id, StringComparer.Ordinal);
             var matched = 0;
             var unknown = 0;
+            var impactMatched = 0;
+            var candidatesByTeam = new Dictionary<long, List<PlayerRoleCandidate>>();
 
             foreach (var teamClaims in claims.GroupBy(c => c.TeamId))
             {
                 if (!teamMap.TryGetValue(teamClaims.Key, out var apiTeamId))
                 {
                     foreach (var claim in teamClaims)
+                    {
                         MarkUnknown(claim);
+                        var impact = await CalculateImpactAsync(claim.TeamId, claim.Player, claim.PlayerKey, claim.Position, null, ct);
+                        AvailabilityNewsService.ApplyImpact(claim, impact);
+                        if (!PlayerImpactSources.IsFallback(impact.Source))
+                            impactMatched++;
+                    }
                     unknown += teamClaims.Count();
                     continue;
                 }
 
-                var squad = await GetApiAsync<ApiSquadResponse>($"players/squads?team={apiTeamId}", $"plantel {teamClaims.Key}", errors, ct);
-                var squadCandidates = (squad?.Response.FirstOrDefault()?.Players ?? [])
-                    .Select(p => new PlayerRoleCandidate(p.Id, p.Name, p.Position, "players/squads"))
-                    .ToList();
-                List<PlayerRoleCandidate>? fallbackCandidates = null;
+                var candidates = await PlayerCandidatesForTeamAsync(apiTeamId, candidatesByTeam, errors, ct);
 
                 foreach (var claim in teamClaims)
                 {
-                    var role = MatchPlayerRole(claim.Player, squadCandidates);
-                    if (role is null)
-                    {
-                        fallbackCandidates ??= await FallbackPlayerCandidatesAsync(apiTeamId, errors, ct);
-                        role = MatchPlayerRole(claim.Player, fallbackCandidates);
-                    }
+                    var role = MatchPlayerRole(claim.ApiFootballPlayerId, claim.Player, candidates);
 
                     if (role is null)
                     {
@@ -285,6 +284,11 @@ namespace Oloraculo.Web.Services
                         claim.PositionMatchedAt = DateTimeOffset.UtcNow;
                         matched++;
                     }
+
+                    var impact = await CalculateImpactAsync(claim.TeamId, claim.Player, claim.PlayerKey, claim.Position, role?.Statistics, ct);
+                    AvailabilityNewsService.ApplyImpact(claim, impact);
+                    if (!PlayerImpactSources.IsFallback(impact.Source))
+                        impactMatched++;
                 }
             }
 
@@ -296,12 +300,14 @@ namespace Oloraculo.Web.Services
                     contexts++;
             }
 
-            notes.Add($"Roles API-Football resueltos: {matched}. Roles desconocidos: {unknown}.");
+            notes.Add($"Roles API-Football resueltos: {matched}. Roles desconocidos: {unknown}. Impactos enriquecidos: {impactMatched}.");
             return new AvailabilityRefreshReport
             {
                 IsConfigured = true,
                 RoleMatchedClaims = matched,
                 RoleUnknownClaims = unknown,
+                ImpactMatchedClaims = impactMatched,
+                ImpactFallbackClaims = claims.Count - impactMatched,
                 ContextRowsUpdated = contexts,
                 Notes = notes,
                 Errors = errors
@@ -321,24 +327,90 @@ namespace Oloraculo.Web.Services
             }
         }
 
-        private async Task<List<PlayerRoleCandidate>> FallbackPlayerCandidatesAsync(long apiTeamId, List<string> errors, CancellationToken ct)
+        private async Task<List<PlayerRoleCandidate>> PlayerCandidatesForTeamAsync(
+            long apiTeamId,
+            Dictionary<long, List<PlayerRoleCandidate>> cache,
+            List<string> errors,
+            CancellationToken ct)
         {
-            var response = await GetApiAsync<ApiPlayerStatsResponse>($"players?team={apiTeamId}&season={_config.ApiFootballSeason}", $"jugadores {apiTeamId}", errors, ct);
+            if (cache.TryGetValue(apiTeamId, out var cached))
+                return cached;
+
+            var squad = await GetApiAsync<ApiSquadResponse>(ApiFootballEndpoints.Squad(apiTeamId), $"plantel {apiTeamId}", errors, ct);
+            var squadCandidates = (squad?.Response.FirstOrDefault()?.Players ?? [])
+                .Select(p => new PlayerRoleCandidate(p.Id, p.Name, p.Position, ApiFootballEndpoints.SquadSource))
+                .Where(c => !string.IsNullOrWhiteSpace(c.Name))
+                .ToList();
+            var seasonCandidates = await SeasonPlayerCandidatesAsync(apiTeamId, errors, ct);
+            var merged = MergeCandidates(squadCandidates, seasonCandidates);
+            cache[apiTeamId] = merged;
+            return merged;
+        }
+
+        private async Task<List<PlayerRoleCandidate>> SeasonPlayerCandidatesAsync(long apiTeamId, List<string> errors, CancellationToken ct)
+        {
+            var response = await GetApiAsync<ApiPlayerStatsResponse>(ApiFootballEndpoints.PlayersByTeamSeason(apiTeamId, _config.ApiFootballSeason), $"jugadores {apiTeamId}", errors, ct);
             return (response?.Response ?? [])
                 .Select(row => new PlayerRoleCandidate(
                     row.Player.Id,
                     row.Player.Name,
                     row.Statistics.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s.Games.Position))?.Games.Position ?? "",
-                    $"players season {_config.ApiFootballSeason}"))
+                    ApiFootballEndpoints.PlayersByTeamSeasonSource(_config.ApiFootballSeason),
+                    row.Statistics))
                 .Where(c => !string.IsNullOrWhiteSpace(c.Name))
                 .ToList();
+        }
+
+        private static List<PlayerRoleCandidate> MergeCandidates(
+            IReadOnlyList<PlayerRoleCandidate> squadCandidates,
+            IReadOnlyList<PlayerRoleCandidate> seasonCandidates)
+        {
+            var merged = new List<PlayerRoleCandidate>();
+            var seasonById = seasonCandidates
+                .Where(c => c.Id > 0)
+                .GroupBy(c => c.Id)
+                .ToDictionary(g => g.Key, g => g.First());
+            var usedSeasonIds = new HashSet<long>();
+
+            foreach (var squad in squadCandidates)
+            {
+                if (squad.Id > 0 && seasonById.TryGetValue(squad.Id, out var season))
+                {
+                    usedSeasonIds.Add(season.Id);
+                    merged.Add(squad with
+                    {
+                        Source = $"{squad.Source}+{season.Source}",
+                        Statistics = season.Statistics
+                    });
+                    continue;
+                }
+
+                var seasonByName = MatchPlayerRole(squad.Name, seasonCandidates);
+                if (seasonByName is not null)
+                {
+                    if (seasonByName.Id > 0)
+                        usedSeasonIds.Add(seasonByName.Id);
+                    merged.Add(squad with
+                    {
+                        Source = $"{squad.Source}+{seasonByName.Source}",
+                        Statistics = seasonByName.Statistics
+                    });
+                }
+                else
+                {
+                    merged.Add(squad);
+                }
+            }
+
+            merged.AddRange(seasonCandidates.Where(c => c.Id <= 0 || !usedSeasonIds.Contains(c.Id)));
+            return merged;
         }
 
         private static void MarkUnknown(AvailabilityClaim claim)
         {
             claim.ApiFootballPlayerId = null;
-            claim.Position = "Unknown";
-            claim.PositionSource = "Unknown";
+            claim.Position = PlayerPositions.Unknown;
+            claim.PositionSource = PlayerPositions.Unknown;
             claim.PositionMatchedAt = DateTimeOffset.UtcNow;
         }
 
@@ -360,6 +432,29 @@ namespace Oloraculo.Web.Services
 
             return null;
         }
+
+        private static PlayerRoleCandidate? MatchPlayerRole(long? playerId, string playerName, IEnumerable<PlayerRoleCandidate> candidates)
+        {
+            if (playerId is > 0)
+            {
+                var byId = candidates.Where(c => c.Id == playerId.Value).ToList();
+                if (byId.Count == 1)
+                    return byId[0];
+            }
+
+            return MatchPlayerRole(playerName, candidates);
+        }
+
+        private async Task<PlayerImpactResult> CalculateImpactAsync(
+            string teamId,
+            string player,
+            string playerKey,
+            string? position,
+            IReadOnlyList<ApiPlayerStatistic>? statistics,
+            CancellationToken ct) =>
+            _impact is null
+                ? PlayerImpactService.FallbackImpact(position)
+                : await _impact.CalculateAsync(teamId, player, playerKey, position, statistics, ct);
 
         private static bool IsFinishedStatus(string? status) =>
             status is "FT" or "AET" or "PEN";
@@ -394,5 +489,10 @@ namespace Oloraculo.Web.Services
 
     }
 
-    public sealed record PlayerRoleCandidate(long Id, string Name, string Position, string Source);
+    public sealed record PlayerRoleCandidate(
+        long Id,
+        string Name,
+        string Position,
+        string Source,
+        IReadOnlyList<ApiPlayerStatistic>? Statistics = null);
 }

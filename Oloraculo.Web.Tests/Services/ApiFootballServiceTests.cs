@@ -22,6 +22,21 @@ namespace Oloraculo.Web.Tests;
 public class ApiFootballServiceTests : TestFixtures
 {
     [Fact]
+    public void ApiFootball_EndpointHelpersProduceExpectedUris()
+    {
+        Assert.Equal("leagues?id=1&season=2026", ApiFootballEndpoints.LeagueCoverage(1, 2026));
+        Assert.Equal("injuries?fixture=10", ApiFootballEndpoints.FixtureInjuries("10"));
+        Assert.Equal("injuries?league=1&season=2026", ApiFootballEndpoints.LeagueInjuries(1, 2026));
+        Assert.Equal("fixtures/lineups?fixture=10", ApiFootballEndpoints.FixtureLineups("10"));
+        Assert.Equal("odds?fixture=10", ApiFootballEndpoints.PreMatchOdds("10"));
+        Assert.Equal("odds/live?fixture=10", ApiFootballEndpoints.LiveOdds("10"));
+        Assert.Equal("fixtures?league=1&season=2026&timezone=UTC", ApiFootballEndpoints.Fixtures(1, 2026));
+        Assert.Equal("teams?league=1&season=2026", ApiFootballEndpoints.Teams(1, 2026));
+        Assert.Equal("players/squads?team=2", ApiFootballEndpoints.Squad(2));
+        Assert.Equal("players?team=2&season=2026", ApiFootballEndpoints.PlayersByTeamSeason(2, 2026));
+    }
+
+    [Fact]
     public void ApiFootball_SquadResponseParsesPlayerPositions()
     {
         var parsed = JsonSerializer.Deserialize<ApiSquadResponse>("""
@@ -37,8 +52,33 @@ public class ApiFootballServiceTests : TestFixtures
             """, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
         Assert.NotNull(parsed);
-        Assert.Equal("Attacker", parsed.Response[0].Players[0].Position);
-        Assert.Equal("Defender", parsed.Response[0].Players[1].Position);
+        Assert.Equal(PlayerPositions.Attacker, parsed.Response[0].Players[0].Position);
+        Assert.Equal(PlayerPositions.Defender, parsed.Response[0].Players[1].Position);
+    }
+
+    [Fact]
+    public void ApiFootball_PlayerStatsResponseParsesImpactFields()
+    {
+        var parsed = JsonSerializer.Deserialize<ApiPlayerStatsResponse>("""
+            {
+              "response": [{
+                "player": { "id": 278, "name": "Kylian Mbappé" },
+                "statistics": [{
+                  "games": { "appearences": "5", "lineups": 4, "minutes": 360, "position": "Attacker", "rating": "7.200000" },
+                  "goals": { "total": 3, "assists": 2 }
+                }]
+              }]
+            }
+            """, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        Assert.NotNull(parsed);
+        var stat = parsed.Response[0].Statistics[0];
+        Assert.Equal(5, stat.Games.Appearences);
+        Assert.Equal(4, stat.Games.Lineups);
+        Assert.Equal(360, stat.Games.Minutes);
+        Assert.Equal(7.2, stat.Games.Rating);
+        Assert.Equal(3, stat.Goals.Total);
+        Assert.Equal(2, stat.Goals.Assists);
     }
 
     [Fact]
@@ -46,17 +86,17 @@ public class ApiFootballServiceTests : TestFixtures
     {
         var candidates = new[]
         {
-            new PlayerRoleCandidate(278, "Kylian Mbappé", "Attacker", "test"),
-            new PlayerRoleCandidate(22090, "William Saliba", "Defender", "test")
+            new PlayerRoleCandidate(278, "Kylian Mbappé", PlayerPositions.Attacker, "test"),
+            new PlayerRoleCandidate(22090, "William Saliba", PlayerPositions.Defender, "test")
         };
 
         var accent = ApiFootballService.MatchPlayerRole("Kylian Mbappe", candidates);
         var initial = ApiFootballService.MatchPlayerRole("W. Saliba", candidates);
 
         Assert.Equal(278, accent?.Id);
-        Assert.Equal("Attacker", accent?.Position);
+        Assert.Equal(PlayerPositions.Attacker, accent?.Position);
         Assert.Equal(22090, initial?.Id);
-        Assert.Equal("Defender", initial?.Position);
+        Assert.Equal(PlayerPositions.Defender, initial?.Position);
     }
 
     [Fact]
@@ -67,7 +107,7 @@ public class ApiFootballServiceTests : TestFixtures
         await db.SaveChangesAsync();
         var handler = new FakeHttpMessageHandler(new Dictionary<string, string>
         {
-            ["https://api.test/fixtures?league=1&season=2026&timezone=UTC"] = """
+            [$"https://api.test/{ApiFootballEndpoints.Fixtures(1, 2026)}"] = """
                 {
                   "response": [{
                     "fixture": {
@@ -117,11 +157,14 @@ public class ApiFootballServiceTests : TestFixtures
         await db.SaveChangesAsync();
         var handler = new FakeHttpMessageHandler(new Dictionary<string, string>
         {
-            ["https://api.test/teams?league=1&season=2026"] = """
+            [$"https://api.test/{ApiFootballEndpoints.Teams(1, 2026)}"] = """
                 {"response":[{"team":{"id":2,"name":"France"}}]}
                 """,
-            ["https://api.test/players/squads?team=2"] = """
+            [$"https://api.test/{ApiFootballEndpoints.Squad(2)}"] = """
                 {"response":[{"team":{"id":2,"name":"France"},"players":[{"id":278,"name":"Kylian Mbappé","position":"Attacker"}]}]}
+                """,
+            [$"https://api.test/{ApiFootballEndpoints.PlayersByTeamSeason(2, 2026)}"] = """
+                {"response":[{"player":{"id":278,"name":"Kylian Mbappé"},"statistics":[{"games":{"position":"Attacker","lineups":4,"minutes":360,"rating":"7.200000"},"goals":{"total":3,"assists":1}}]}]}
                 """
         });
         var api = ApiService(db, handler);
@@ -131,7 +174,10 @@ public class ApiFootballServiceTests : TestFixtures
 
         Assert.Equal(1, report.RoleMatchedClaims);
         Assert.Equal(278, claim.ApiFootballPlayerId);
-        Assert.Equal("Attacker", claim.Position);
+        Assert.Equal(PlayerPositions.Attacker, claim.Position);
+        Assert.True(claim.AttackImpact > AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Attack);
+        Assert.Equal(3, claim.ApiGoals);
+        Assert.Equal(PlayerImpactSources.ApiStats, claim.ImpactSource);
         Assert.Equal("France confirmed Kylian Mbappe will miss the match.", claim.SupportingQuote);
     }
 
@@ -153,7 +199,7 @@ public class ApiFootballServiceTests : TestFixtures
         await db.SaveChangesAsync();
         var handler = new FakeHttpMessageHandler(new Dictionary<string, string>
         {
-            ["https://api.test/teams?league=1&season=2026"] = """
+            [$"https://api.test/{ApiFootballEndpoints.Teams(1, 2026)}"] = """
                 {"response":[{"team":{"id":2,"name":"France"}}]}
                 """
         });
@@ -163,7 +209,57 @@ public class ApiFootballServiceTests : TestFixtures
         var claim = Assert.Single(await db.AvailabilityClaims.ToListAsync());
 
         Assert.Equal(1, report.RoleUnknownClaims);
-        Assert.Equal("Unknown", claim.Position);
+        Assert.Equal(PlayerPositions.Unknown, claim.Position);
+    }
+
+    [Fact]
+    public async Task ApiFootball_RefreshFixtureContextDedupesApiAndNewsPlayersUsingStrongerImpact()
+    {
+        await using var db = await NewDb();
+        db.Teams.AddRange(new Team { Id = "france", Name = "France" }, new Team { Id = "argentina", Name = "Argentina" });
+        db.Fixtures.Add(new Fixture { Id = "f1", Group = "A", HomeTeamId = "france", AwayTeamId = "argentina" });
+        db.ApiMappings.Add(new ApiMapping { LocalFixtureId = "f1", ExternalFixtureId = "10" });
+        db.AvailabilityClaims.Add(new AvailabilityClaim
+        {
+            Player = "Kylian Mbappe",
+            PlayerKey = AvailabilityNewsService.NormalizePlayerKey("Kylian Mbappe"),
+            TeamId = "france",
+            TeamName = "France",
+            Status = AvailabilityClaimStatus.ConfirmedOutInjury,
+            EvidenceLevel = AvailabilityEvidenceLevel.Official,
+            SourceUrl = "https://source.test",
+            AffectsPrediction = true,
+            Position = PlayerPositions.Attacker,
+            AttackImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Attack,
+            DefenseImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Defense
+        });
+        await db.SaveChangesAsync();
+        var handler = new FakeHttpMessageHandler(new Dictionary<string, string>
+        {
+            [$"https://api.test/{ApiFootballEndpoints.LeagueCoverage(1, 2026)}"] = """{"response":[{"league":{"coverage":{"injuries":true,"odds":true,"fixtures":{"lineups":true}}}}]}""",
+            [$"https://api.test/{ApiFootballEndpoints.FixtureInjuries("10")}"] = """
+                {"response":[{"player":{"id":278,"name":"Kylian Mbappé","type":"Missing Fixture","reason":"injury"},"team":{"id":2,"name":"France"}}]}
+                """,
+            [$"https://api.test/{ApiFootballEndpoints.LeagueInjuries(1, 2026)}"] = """{"response":[]}""",
+            [$"https://api.test/{ApiFootballEndpoints.FixtureLineups("10")}"] = """{"response":[]}""",
+            [$"https://api.test/{ApiFootballEndpoints.PreMatchOdds("10")}"] = """{"response":[]}""",
+            [$"https://api.test/{ApiFootballEndpoints.LiveOdds("10")}"] = """{"response":[]}""",
+            [$"https://api.test/{ApiFootballEndpoints.Squad(2)}"] = """
+                {"response":[{"team":{"id":2,"name":"France"},"players":[{"id":278,"name":"Kylian Mbappé","position":"Attacker"}]}]}
+                """,
+            [$"https://api.test/{ApiFootballEndpoints.PlayersByTeamSeason(2, 2026)}"] = """
+                {"response":[{"player":{"id":278,"name":"Kylian Mbappé"},"statistics":[{"games":{"position":"Attacker","lineups":4,"minutes":360,"rating":"7.200000"},"goals":{"total":3,"assists":1}}]}]}
+                """
+        });
+        var api = ApiService(db, handler);
+
+        var report = await api.RefreshFixtureContextAsync("f1");
+        var context = await db.FixtureContexts.FindAsync("f1");
+
+        Assert.NotNull(context);
+        Assert.Equal(1, context.UnavailableHomePlayers);
+        Assert.True(context.UnavailableHomeAttackImpact > AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Attack);
+        Assert.Equal(1, report.ImpactMatchedPlayers);
     }
 
     private static ApiFootballService ApiService(OloraculoDbContext db, HttpMessageHandler handler)
@@ -176,14 +272,20 @@ public class ApiFootballServiceTests : TestFixtures
             ApiFootballSeason = 2026,
             OpenRouterApiKey = "test-key",
             OpenRouterBaseUrl = "https://openrouter.test/",
-            AvailabilitySourceUrls = []
+            AvailabilitySourceUrls = [],
+            GoalscorersRawUrl = ""
         });
+        var impact = new PlayerImpactService(
+            new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())),
+            new TestEnvironment(NewTempRoot()),
+            options);
         var availability = new AvailabilityNewsService(
             new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())) { BaseAddress = new Uri("https://openrouter.test/") },
             db,
-            options);
+            options,
+            impact);
 
-        return new ApiFootballService(new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") }, db, options, availability);
+        return new ApiFootballService(new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") }, db, options, availability, impact);
     }
 
 }

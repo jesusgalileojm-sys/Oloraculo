@@ -51,7 +51,7 @@
         }
         @if (_apiReport is not null)
         {
-            <MudAlert Class="mt-2" Severity="@(_apiReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">@string.Join(" ", _apiReport.Notes)</MudAlert>
+            <MudAlert Class="mt-2" Severity="@(_apiReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">Impactos API enriquecidos: @_apiReport.ImpactMatchedPlayers. Fallback por posición: @_apiReport.ImpactFallbackPlayers. @string.Join(" ", _apiReport.Notes)</MudAlert>
             @foreach (var error in _apiReport.Errors)
             {
                 <MudAlert Class="mt-2" Severity="Severity.Warning" Variant="Variant.Outlined">@error</MudAlert>
@@ -60,7 +60,7 @@
         @if (_availabilityReport is not null)
         {
             <MudAlert Class="mt-2" Severity="@(_availabilityReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">
-                Fuentes leídas: @_availabilityReport.SourcesFetched. Fuentes omitidas: @_availabilityReport.SourcesSkipped. Reclamos guardados: @_availabilityReport.ClaimsSaved. Confirmados out: @_availabilityReport.ConfirmedOutClaims. Dudas: @_availabilityReport.DoubtfulClaims. Disponibles: @_availabilityReport.AvailableClaims. Reclamos que afectan predicciones: @_availabilityReport.ClaimsAffectingPredictions. Roles matcheados: @_availabilityReport.RoleMatchedClaims. Roles desconocidos: @_availabilityReport.RoleUnknownClaims. Contextos actualizados: @_availabilityReport.ContextRowsUpdated. @string.Join(" ", _availabilityReport.Notes)
+                Fuentes leídas: @_availabilityReport.SourcesFetched. Fuentes omitidas: @_availabilityReport.SourcesSkipped. Reclamos guardados: @_availabilityReport.ClaimsSaved. Confirmados out: @_availabilityReport.ConfirmedOutClaims. Dudas: @_availabilityReport.DoubtfulClaims. Disponibles: @_availabilityReport.AvailableClaims. Reclamos que afectan predicciones: @_availabilityReport.ClaimsAffectingPredictions. Roles matcheados: @_availabilityReport.RoleMatchedClaims. Roles desconocidos: @_availabilityReport.RoleUnknownClaims. Impactos enriquecidos: @_availabilityReport.ImpactMatchedClaims. Fallback por posición: @_availabilityReport.ImpactFallbackClaims. Contextos actualizados: @_availabilityReport.ContextRowsUpdated. @string.Join(" ", _availabilityReport.Notes)
             </MudAlert>
             @foreach (var error in _availabilityReport.Errors)
             {
@@ -70,7 +70,7 @@
         @if (_roleReport is not null)
         {
             <MudAlert Class="mt-2" Severity="@(_roleReport.Errors.Count > 0 ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined">
-                Enriquecimiento de roles: @_roleReport.RoleMatchedClaims matcheados, @_roleReport.RoleUnknownClaims desconocidos. @string.Join(" ", _roleReport.Notes)
+                Enriquecimiento de roles: @_roleReport.RoleMatchedClaims matcheados, @_roleReport.RoleUnknownClaims desconocidos. Impactos enriquecidos: @_roleReport.ImpactMatchedClaims. Fallback por posición: @_roleReport.ImpactFallbackClaims. @string.Join(" ", _roleReport.Notes)
             </MudAlert>
             @foreach (var error in _roleReport.Errors)
             {

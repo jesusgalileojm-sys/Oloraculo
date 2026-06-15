@@ -162,6 +162,7 @@
                                     <MudTh>Jugador</MudTh>
                                     <MudTh>Equipo</MudTh>
                                     <MudTh>Rol</MudTh>
+                                    <MudTh>Impacto</MudTh>
                                     <MudTh>Estado</MudTh>
                                     <MudTh>Fuente</MudTh>
                                 </HeaderContent>
@@ -169,6 +170,7 @@
                                     <MudTd DataLabel="Jugador">@context.Player</MudTd>
                                     <MudTd DataLabel="Equipo"><TeamLabel TeamId="@context.TeamId" Name="@context.TeamName" Compact="true" /></MudTd>
                                     <MudTd DataLabel="Rol">@context.Position</MudTd>
+                                    <MudTd DataLabel="Impacto">@ImpactText(context)</MudTd>
                                     <MudTd DataLabel="Estado">
                                         <MudChip T="string" Size="Size.Small" Color="@(context.AffectsPrediction ? Color.Warning : Color.Default)" Variant="Variant.Outlined">@StatusText(context)</MudChip>
                                         @if (!string.IsNullOrWhiteSpace(context.Reason))
@@ -469,6 +471,13 @@
     private string SelectedClass(Fixture fixture) => _selected?.Id == fixture.Id ? "selected" : "";
     private static string SourceText(AvailabilityClaim claim) => string.IsNullOrWhiteSpace(claim.Publisher) ? claim.SourceUrl : claim.Publisher;
     private static string StatusText(AvailabilityClaim claim) => claim.AffectsPrediction ? $"{claim.Status} · impacta" : claim.Status.ToString();
+    private static string ImpactText(AvailabilityClaim claim)
+    {
+        if (!claim.AttackImpact.HasValue && !claim.DefenseImpact.HasValue)
+            return claim.ImpactSource;
+
+        return $"A -{claim.AttackImpact ?? 0:P1} / D -{claim.DefenseImpact ?? 0:P1} · {claim.ImpactSource}";
+    }
     private static string MatchSnapshotText(MatchSnapshotSummary snapshot)
     {
         var source = snapshot.BatchId.HasValue ? "fixture completo" : "partido";

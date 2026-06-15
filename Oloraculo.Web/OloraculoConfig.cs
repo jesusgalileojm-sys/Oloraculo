@@ -15,6 +15,8 @@
         public string FifaRankingsRawUrl { get; set; } = "https://en.wikipedia.org/w/index.php?title=Module:SportsRankings/data/FIFA_World_Rankings&action=raw";
         public string EloRankingsBaseUrl { get; set; } = "https://www.international-football.net/elo-ratings-table";
         public string RankingRefreshUserAgent { get; set; } = "Oloraculo";
+        public string GoalscorersRawUrl { get; set; } = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/goalscorers.csv";
+        public int GoalscorerLookbackYears { get; set; } = 6;
         public string OpenRouterBaseUrl { get; set; } = "https://openrouter.ai/api/v1/";
         public string? OpenRouterApiKey { get; set; }
         public string OpenRouterModel { get; set; } = "openai/gpt-4o-mini";
@@ -34,5 +36,6 @@
         public const string EloCsv = "elo_snapshot.csv";
         public const string FifaRankingsCsv = "fifa_rankings.csv";
         public const string HistoricalResultsCsv = "historical_results.csv";
+        public const string GoalscorersCsv = "goalscorers.csv";
     }
 }

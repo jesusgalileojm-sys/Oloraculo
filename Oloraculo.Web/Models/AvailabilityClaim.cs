@@ -17,9 +17,19 @@ namespace Oloraculo.Web.Models
         public DateTimeOffset? ObservedDate { get; set; }
         public bool AffectsPrediction { get; set; }
         public long? ApiFootballPlayerId { get; set; }
-        public string Position { get; set; } = "Unknown";
-        public string PositionSource { get; set; } = "Unknown";
+        public string Position { get; set; } = PlayerPositions.Unknown;
+        public string PositionSource { get; set; } = PlayerPositions.Unknown;
         public DateTimeOffset? PositionMatchedAt { get; set; }
+        public double? AttackImpact { get; set; }
+        public double? DefenseImpact { get; set; }
+        public string ImpactSource { get; set; } = PlayerImpactSources.Position;
+        public double? WeightedInternationalGoals { get; set; }
+        public int? ApiGoals { get; set; }
+        public int? ApiAssists { get; set; }
+        public int? ApiMinutes { get; set; }
+        public int? ApiLineups { get; set; }
+        public double? ApiRating { get; set; }
+        public DateTimeOffset? ImpactMatchedAt { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 }
