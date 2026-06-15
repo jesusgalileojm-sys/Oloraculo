@@ -12,6 +12,8 @@ namespace Oloraculo.Web.Models
         public int ClaimsAffectingPredictions { get; init; }
         public int RoleMatchedClaims { get; init; }
         public int RoleUnknownClaims { get; init; }
+        public int ImpactMatchedClaims { get; init; }
+        public int ImpactFallbackClaims { get; init; }
         public int ContextRowsUpdated { get; init; }
         public IReadOnlyList<string> Notes { get; init; } = [];
         public IReadOnlyList<string> Errors { get; init; } = [];

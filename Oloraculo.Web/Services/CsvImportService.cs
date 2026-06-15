@@ -277,7 +277,7 @@ namespace Oloraculo.Web.Services
                     """, ct);
                 await ExecuteSchemaAsync("""CREATE UNIQUE INDEX IF NOT EXISTS "IX_AvailabilitySources_Url" ON "AvailabilitySources" ("Url")""", ct);
 
-                await ExecuteSchemaAsync("""
+                await ExecuteSchemaAsync($"""
                     CREATE TABLE IF NOT EXISTS "AvailabilityClaims" (
                         "Id" INTEGER NOT NULL CONSTRAINT "PK_AvailabilityClaims" PRIMARY KEY AUTOINCREMENT,
                         "Player" TEXT NOT NULL,
@@ -294,9 +294,19 @@ namespace Oloraculo.Web.Services
                         "ObservedDate" TEXT NULL,
                         "AffectsPrediction" INTEGER NOT NULL,
                         "ApiFootballPlayerId" INTEGER NULL,
-                        "Position" TEXT NOT NULL DEFAULT 'Unknown',
-                        "PositionSource" TEXT NOT NULL DEFAULT 'Unknown',
+                        "Position" TEXT NOT NULL DEFAULT '{PlayerPositions.Unknown}',
+                        "PositionSource" TEXT NOT NULL DEFAULT '{PlayerPositions.Unknown}',
                         "PositionMatchedAt" TEXT NULL,
+                        "AttackImpact" REAL NULL,
+                        "DefenseImpact" REAL NULL,
+                        "ImpactSource" TEXT NOT NULL DEFAULT '{PlayerImpactSources.Position}',
+                        "WeightedInternationalGoals" REAL NULL,
+                        "ApiGoals" INTEGER NULL,
+                        "ApiAssists" INTEGER NULL,
+                        "ApiMinutes" INTEGER NULL,
+                        "ApiLineups" INTEGER NULL,
+                        "ApiRating" REAL NULL,
+                        "ImpactMatchedAt" TEXT NULL,
                         "CreatedAt" TEXT NOT NULL
                     )
                     """, ct);
@@ -306,11 +316,31 @@ namespace Oloraculo.Web.Services
                 if (!claimColumns.Contains("ApiFootballPlayerId"))
                     await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiFootballPlayerId" INTEGER NULL""", ct);
                 if (!claimColumns.Contains("Position"))
-                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "Position" TEXT NOT NULL DEFAULT 'Unknown'""", ct);
+                    await ExecuteSchemaAsync($"""ALTER TABLE "AvailabilityClaims" ADD COLUMN "Position" TEXT NOT NULL DEFAULT '{PlayerPositions.Unknown}'""", ct);
                 if (!claimColumns.Contains("PositionSource"))
-                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "PositionSource" TEXT NOT NULL DEFAULT 'Unknown'""", ct);
+                    await ExecuteSchemaAsync($"""ALTER TABLE "AvailabilityClaims" ADD COLUMN "PositionSource" TEXT NOT NULL DEFAULT '{PlayerPositions.Unknown}'""", ct);
                 if (!claimColumns.Contains("PositionMatchedAt"))
                     await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "PositionMatchedAt" TEXT NULL""", ct);
+                if (!claimColumns.Contains("AttackImpact"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "AttackImpact" REAL NULL""", ct);
+                if (!claimColumns.Contains("DefenseImpact"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "DefenseImpact" REAL NULL""", ct);
+                if (!claimColumns.Contains("ImpactSource"))
+                    await ExecuteSchemaAsync($"""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ImpactSource" TEXT NOT NULL DEFAULT '{PlayerImpactSources.Position}'""", ct);
+                if (!claimColumns.Contains("WeightedInternationalGoals"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "WeightedInternationalGoals" REAL NULL""", ct);
+                if (!claimColumns.Contains("ApiGoals"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiGoals" INTEGER NULL""", ct);
+                if (!claimColumns.Contains("ApiAssists"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiAssists" INTEGER NULL""", ct);
+                if (!claimColumns.Contains("ApiMinutes"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiMinutes" INTEGER NULL""", ct);
+                if (!claimColumns.Contains("ApiLineups"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiLineups" INTEGER NULL""", ct);
+                if (!claimColumns.Contains("ApiRating"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ApiRating" REAL NULL""", ct);
+                if (!claimColumns.Contains("ImpactMatchedAt"))
+                    await ExecuteSchemaAsync("""ALTER TABLE "AvailabilityClaims" ADD COLUMN "ImpactMatchedAt" TEXT NULL""", ct);
 
                 var fixtureColumns = await ColumnsAsync("FixtureContexts", ct);
                 if (fixtureColumns.Count > 0 && !fixtureColumns.Contains("HasAvailabilityNews"))

@@ -11,6 +11,8 @@
         public int LineupRows { get; init; }
         public int PreMatchOddsRows { get; init; }
         public int LiveOddsRows { get; init; }
+        public int ImpactMatchedPlayers { get; init; }
+        public int ImpactFallbackPlayers { get; init; }
         public IReadOnlyList<string> Notes { get; init; } = [];
         public IReadOnlyList<string> Errors { get; init; } = [];
     }

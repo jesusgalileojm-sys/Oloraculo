@@ -284,6 +284,7 @@ Important keys:
 - `RankingRefreshOnStartup`
 - `FifaRankingsRawUrl`
 - `EloRankingsBaseUrl`
+- `GoalscorersRawUrl` and `GoalscorerLookbackYears`
 - `ApiFootballApiKey`
 - `OpenRouterApiKey`
 - `AvailabilitySourceUrls`
@@ -302,5 +303,6 @@ CSV seed data lives in `Oloraculo.Web/Data`:
 
 - `wc2026_groups.csv`
 - `historical_results.csv`
+- `goalscorers.csv` (optional cache, refreshed from `GoalscorersRawUrl` when missing)
 - `fifa_rankings.csv`
 - `elo_snapshot.csv`

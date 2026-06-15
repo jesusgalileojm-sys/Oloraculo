@@ -459,9 +459,9 @@ public class AvailabilityNewsServiceTests : TestFixtures
     [Fact]
     public void AvailabilityNews_PositionImpactsUseUnknownFallbackAndClampTotals()
     {
-        Assert.Equal((0.020, 0.000), AvailabilityNewsService.ImpactForPosition("Unknown"));
+        Assert.Equal((0.020, 0.000), AvailabilityNewsService.ImpactForPosition(PlayerPositions.Unknown));
 
-        var clamped = AvailabilityNewsService.SumImpacts(Enumerable.Repeat("Goalkeeper", 10));
+        var clamped = AvailabilityNewsService.SumImpacts(Enumerable.Repeat(PlayerPositions.Goalkeeper, 10));
 
         Assert.Equal(0.0, clamped.Attack);
         Assert.Equal(0.18, clamped.Defense);
@@ -480,15 +480,15 @@ public class AvailabilityNewsServiceTests : TestFixtures
         {
             FixtureId = "test",
             UnavailableHomePlayers = 1,
-            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition("Attacker").Attack,
-            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition("Attacker").Defense
+            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Attack,
+            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Attacker).Defense
         });
         var defenderContext = TestContext(fixtureContext: new FixtureContext
         {
             FixtureId = "test",
             UnavailableHomePlayers = 1,
-            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition("Defender").Attack,
-            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition("Defender").Defense
+            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Defender).Attack,
+            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Defender).Defense
         });
 
         var attackerPrediction = new GoalPlusRecentContextModel(goal).Predict(attackerContext);
@@ -511,8 +511,8 @@ public class AvailabilityNewsServiceTests : TestFixtures
         {
             FixtureId = "test",
             UnavailableHomePlayers = 1,
-            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition("Defender").Attack,
-            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition("Defender").Defense
+            UnavailableHomeAttackImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Defender).Attack,
+            UnavailableHomeDefenseImpact = AvailabilityNewsService.ImpactForPosition(PlayerPositions.Defender).Defense
         });
 
         var prediction = new GoalPlusRecentContextModel(goal).Predict(defenderContext);
@@ -537,7 +537,7 @@ public class AvailabilityNewsServiceTests : TestFixtures
             EvidenceLevel = AvailabilityEvidenceLevel.Official,
             SourceUrl = "https://source.test",
             AffectsPrediction = true,
-            Position = "Attacker"
+            Position = PlayerPositions.Attacker
         });
         await db.SaveChangesAsync();
         var service = new AvailabilityNewsService(new HttpClient(new FakeHttpMessageHandler(new Dictionary<string, string>())), db, AvailabilityOptions([]));
