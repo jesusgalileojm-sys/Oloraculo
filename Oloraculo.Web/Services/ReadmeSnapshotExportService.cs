@@ -345,6 +345,9 @@ namespace Oloraculo.Web.Services
 
         private static string PredictionText(MatchPrediction prediction)
         {
+            if (TryExpectedGoalsScore(prediction, out var expectedGoalsScore))
+                return expectedGoalsScore;
+
             if (prediction.MostLikelyScore is { } score)
                 return $"{score.Home}-{score.Away}";
 
@@ -356,6 +359,24 @@ namespace Oloraculo.Web.Services
                 _ => "-"
             };
         }
+
+        private static bool TryExpectedGoalsScore(MatchPrediction prediction, out string score)
+        {
+            score = "";
+            if (!prediction.ExpectedHomeGoals.HasValue || !prediction.ExpectedAwayGoals.HasValue)
+                return false;
+
+            var home = prediction.ExpectedHomeGoals.Value;
+            var away = prediction.ExpectedAwayGoals.Value;
+            if (!double.IsFinite(home) || !double.IsFinite(away))
+                return false;
+
+            score = $"{RoundedExpectedGoals(home)}-{RoundedExpectedGoals(away)}";
+            return true;
+        }
+
+        private static int RoundedExpectedGoals(double value) =>
+            Math.Max(0, (int)Math.Round(value, MidpointRounding.AwayFromZero));
 
         private static string RationaleText(
             MatchPrediction prediction,
@@ -403,6 +424,8 @@ namespace Oloraculo.Web.Services
         {
             var signals = new List<string>();
             signals.AddRange(prediction.FeaturesUsed);
+            if (prediction.MostLikelyScore is { } score)
+                signals.Add($"Marcador más probable: {score.Home}-{score.Away}");
             signals.AddRange(prediction.Drivers.Where(IsSignalDriver));
             return LimitedList(signals, maxItems: 4, maxItemLength: 90);
         }

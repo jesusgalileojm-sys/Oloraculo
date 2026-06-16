@@ -265,17 +265,46 @@ public class ReadmeSnapshotExportServiceTests : TestFixtures
     {
         var rendered = ReadmeSnapshotExportService.RenderSnapshotBlock(
             TournamentProjection("hash", 100, DateTimeOffset.Parse("2026-01-01T00:00:00Z")),
-            [PredictionResult(PlayedFixture())],
+            [
+                PredictionResult(
+                    PlayedFixture(),
+                    expectedHomeGoals: 2.6,
+                    expectedAwayGoals: .8,
+                    mostLikelyScore: (1, 1))
+            ],
             Names(),
             DateTimeOffset.Parse("2026-01-02T00:00:00Z"));
 
         Assert.Contains("**2-1**", rendered);
-        Assert.Contains("Prediction:", rendered);
+        Assert.Contains("<sub>Prediction: 3-1</sub>", rendered);
         Assert.Contains("FT", rendered);
     }
 
     [Fact]
-    public void ReadmeExporter_RendersPredictionForUnplayedFixtures()
+    public void ReadmeExporter_RendersRoundedExpectedGoalsForUnplayedFixtures()
+    {
+        var rendered = ReadmeSnapshotExportService.RenderSnapshotBlock(
+            TournamentProjection("hash", 100, DateTimeOffset.Parse("2026-01-01T00:00:00Z")),
+            [
+                PredictionResult(
+                    UnplayedFixture(),
+                    expectedHomeGoals: 2.6,
+                    expectedAwayGoals: .8,
+                    mostLikelyScore: (1, 1))
+            ],
+            Names(),
+            DateTimeOffset.Parse("2026-01-02T00:00:00Z"));
+
+        Assert.Contains("| Match | Status | Result / Pick | Why | H | D | A |", rendered);
+        Assert.Contains("| <img", rendered);
+        Assert.Contains("| 3-1 |", rendered);
+        Assert.Contains("Marcador m&#225;s probable: 1-1", rendered);
+        Assert.Contains("60", rendered);
+        Assert.Contains("%", rendered);
+    }
+
+    [Fact]
+    public void ReadmeExporter_FallsBackToMostLikelyScoreWhenExpectedGoalsAreMissing()
     {
         var rendered = ReadmeSnapshotExportService.RenderSnapshotBlock(
             TournamentProjection("hash", 100, DateTimeOffset.Parse("2026-01-01T00:00:00Z")),
@@ -283,8 +312,6 @@ public class ReadmeSnapshotExportServiceTests : TestFixtures
             Names(),
             DateTimeOffset.Parse("2026-01-02T00:00:00Z"));
 
-        Assert.Contains("| Match | Status | Result / Pick | Why | H | D | A |", rendered);
-        Assert.Contains("| <img", rendered);
         Assert.Contains("1-0", rendered);
         Assert.Contains("60", rendered);
         Assert.Contains("%", rendered);
@@ -404,7 +431,10 @@ public class ReadmeSnapshotExportServiceTests : TestFixtures
         IReadOnlyList<SourceMetadata>? sources = null,
         IReadOnlyList<string>? featuresUsed = null,
         IReadOnlyList<string>? drivers = null,
-        IReadOnlyList<string>? missing = null) => new()
+        IReadOnlyList<string>? missing = null,
+        double? expectedHomeGoals = null,
+        double? expectedAwayGoals = null,
+        (int Home, int Away)? mostLikelyScore = null) => new()
     {
         Fixture = fixture,
         HomeTeamName = "Argentina",
@@ -417,7 +447,9 @@ public class ReadmeSnapshotExportServiceTests : TestFixtures
             PredictorName = "Oraculo final",
             PredictorPriority = 5,
             Outcome = new OutcomeProbabilities(.6, .25, .15),
-            MostLikelyScore = (1, 0),
+            ExpectedHomeGoals = expectedHomeGoals,
+            ExpectedAwayGoals = expectedAwayGoals,
+            MostLikelyScore = mostLikelyScore ?? (1, 0),
             Explanation = "test",
             Sources = sources ?? [],
             FeaturesUsed = featuresUsed ?? [],
