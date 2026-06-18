@@ -29,6 +29,17 @@ builder.Services.AddScoped<EvaluationService>();
 builder.Services.AddScoped<SnapshotService>();
 builder.Services.AddScoped<SimulationService>();
 builder.Services.AddScoped<ReadmeSnapshotExportService>();
+
+// 🔴 NUEVO: Agregar servicio de Live Match con SofaScore
+builder.Services.AddScoped<ILiveMatchService, LiveMatchService>();
+builder.Services.AddHttpClient<ILiveMatchService, LiveMatchService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.sofascore.com/api/v1");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("User-Agent", "Oloraculo");
+});
+
 builder.Services.AddHttpClient<PlayerImpactService>((sp, client) =>
 {
     var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OloraculoConfig>>().Value;
